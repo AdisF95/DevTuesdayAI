@@ -1,3 +1,6 @@
 <Solution>
   <Project Path="WorldCuppy/WorldCuppy.csproj" />
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
 </Solution>

@@ -1,5 +1,39 @@
 # WorldCuppy — Claude Code Guide
 
+## Domain
+
+WorldCuppy is a **2026 FIFA World Cup prediction game**. Users predict knockout match outcomes and score points based on accuracy.
+
+### Key Concepts
+
+- **Tournament** — the 2026 World Cup. 48 teams, new format: 12 groups of 4, top 2 + 8 best third-place teams advance to a Round of 32.
+- **Match** — a fixture with two teams, a scheduled kickoff time, and an optional final score once played.
+- **Prediction** — a user's predicted scoreline for a specific knockout match, locked before kickoff.
+- **User** — a registered player who submits predictions and accumulates points on a leaderboard.
+- **Leaderboard** — ranked list of users by total points.
+
+### Prediction Scope
+
+Users predict **knockout stage matches only** (Round of 32 → Round of 16 → Quarter-finals → Semi-finals → Final). No group stage predictions.
+
+### Scoring Rules
+
+| Outcome | Points |
+|---|---|
+| Exact scoreline correct | 3 pts |
+| Correct result (win/draw/loss), wrong score | 1 pt |
+| Wrong result | 0 pts |
+
+Points are awarded automatically when a match result is recorded.
+
+### Entity Naming
+
+Use these names consistently throughout the codebase:
+
+`Tournament`, `Team`, `Match`, `Prediction`, `User`, `Leaderboard`, `MatchResult`, `KnockoutRound`
+
+---
+
 ## Stack
 
 | Layer | Technology |
@@ -67,6 +101,30 @@ Each **feature folder is self-contained**: the command/query, its handler, the e
 - Keep pages thin: extract logic into services or send MediatR requests directly.
 - Use `@rendermode InteractiveServer` only where interactivity is needed; default to static SSR.
 
+## Dev Setup — Visual Studio (F5)
+
+Pressing **Start** in Visual Studio launches the full stack automatically via Docker Compose:
+
+| Service | How it starts |
+|---|---|
+| App (Blazor + API) | Built into a Linux container, debugger attached |
+| PostgreSQL | `postgres:17` container, persisted via named volume |
+
+**Prerequisites:** Docker Desktop running.
+
+VS uses `docker-compose.dcproj` as the startup project. It merges `docker-compose.yml` + `docker-compose.override.yml` — the override sets `ASPNETCORE_ENVIRONMENT=Development` and injects the connection string pointing to the `postgres` service.
+
+**Migrations are applied automatically on startup** — `Program.cs` calls `db.Database.MigrateAsync()` before the app begins serving requests. No manual `dotnet ef database update` needed in dev.
+
+**Connection strings:**
+
+| Context | Host |
+|---|---|
+| Running via VS / Docker Compose | `Host=postgres` (injected by docker-compose.override.yml) |
+| Running locally without Docker | `Host=localhost` (appsettings.Development.json) |
+
+Dev password (non-production only): `Dev@12345!`
+
 ## Build & Run
 
 ```powershell
@@ -76,10 +134,10 @@ dotnet restore
 # Build
 dotnet build
 
-# Run (dev)
+# Run (dev, without Docker)
 dotnet run --project WorldCuppy/WorldCuppy.csproj
 
-# Watch (hot reload)
+# Watch (hot reload, without Docker)
 dotnet watch --project WorldCuppy/WorldCuppy.csproj
 ```
 
