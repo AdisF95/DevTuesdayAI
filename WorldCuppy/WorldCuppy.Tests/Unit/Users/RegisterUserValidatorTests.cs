@@ -10,9 +10,15 @@ public class RegisterUserValidatorTests
     private readonly RegisterUserValidator _validator = new();
     private readonly Faker _faker = new();
 
+    private static string SafeUsername(Faker faker)
+    {
+        var name = faker.Internet.UserName().Replace(".", "_").Replace("-", "_");
+        return name[..Math.Min(50, name.Length)];
+    }
+
     /// <summary>A valid command built with Bogus — all rule variations start from this baseline.</summary>
     private RegisterUserCommand ValidCommand() => new(
-        Username: _faker.Internet.UserName().Replace(".", "_").Replace("-", "_")[..Math.Min(50, _faker.Internet.UserName().Length)],
+        Username: SafeUsername(_faker),
         Email: _faker.Internet.Email(),
         Password: _faker.Internet.Password(memorable: false, length: 12));
 
