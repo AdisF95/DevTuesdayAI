@@ -35,6 +35,9 @@ Every new command or query **must** ship with tests. Use the `unit-test` skill a
 **Key test infrastructure:**
 - Test project: `WorldCuppy.Tests/WorldCuppy.Tests.csproj`
 - `InternalsVisibleTo("WorldCuppy.Tests")` is set in `WorldCuppy/Properties/AssemblyInfo.cs` — `internal` helpers are automatically accessible
+- Integration test base: `PostgreSqlFixture` in `WorldCuppy.Tests/Integration/Infrastructure/` — `IAsyncLifetime`, spins up `postgres:17` via Testcontainers, applies EF migrations. Use via `IClassFixture<PostgreSqlFixture>`; call `db.CreateDbContext()` per test to get a fresh `WorldCuppyDbContext`.
+- **EF Core version pinning:** `Testcontainers.PostgreSql` pulls in an older EF Core transitively. When adding any Testcontainers package to the test project, also explicitly pin `Microsoft.EntityFrameworkCore` and `Npgsql.EntityFrameworkCore.PostgreSQL` to match the main project's versions — otherwise CS1705 breaks the build.
+- **Bogus username safety:** `_faker.Internet.UserName()` can return strings shorter than your slice target. Always clamp: `name[..Math.Min(n, name.Length)]`.
 
 ## Guardrails
 

@@ -20,6 +20,7 @@ WorldCuppy/
 ├── Components/              # Blazor UI layer
 │   ├── Pages/               # Routable page components
 │   └── Layout/              # Shared layout components
+├── Domain/                  # Entity classes (plain C# — no EF attributes)
 ├── Features/                # Vertical slices (one folder per feature)
 │   └── <FeatureName>/
 │       ├── <FeatureName>Command.cs
@@ -27,6 +28,7 @@ WorldCuppy/
 │       ├── <FeatureName>Validator.cs
 │       └── <FeatureName>Response.cs
 ├── Infrastructure/
+│   ├── Auth/                # Cookie auth helpers (PendingAuthStore, PasswordHasher, ClaimsPrincipalFactory)
 │   ├── Persistence/         # DbContext, migrations, entity configs
 │   └── Extensions/          # IServiceCollection extension methods
 └── Program.cs               # App wiring — keep thin
@@ -59,6 +61,23 @@ WorldCuppy/
 - Always add an XML `<summary>` doc comment above every public method, constructor, and class.
 - Never remove existing comments from code, even when refactoring. If a comment is stale, update it.
 
+### Authentication
+
+Cookie auth — no ASP.NET Core Identity, no extra NuGet packages.
+
+**Stack:** `AddAuthentication().AddCookie()` + `AddCascadingAuthenticationState()` registered in `Infrastructure/Extensions/AuthExtensions.cs`.
+
+**Blazor Server constraint:** `HttpContext` is unavailable inside a SignalR circuit (interactive pages). Sign-in therefore uses the **PendingAuthStore bridge pattern**:
+1. The Blazor page calls a MediatR handler which validates credentials, then calls `PendingAuthStore.Store(ClaimsPrincipal)` → returns a one-time `Guid` token (5-min TTL).
+2. The page calls `NavigationManager.NavigateTo($"/account/complete-auth/{token}", forceLoad: true)` — a full HTTP round-trip.
+3. The minimal API endpoint at `GET /account/complete-auth/{token:guid}` reads from `PendingAuthStore`, calls `HttpContext.SignInAsync()`, and redirects to `/`.
+
+Key files: `Infrastructure/Auth/PendingAuthStore.cs`, `Infrastructure/Auth/PasswordHasher.cs` (PBKDF2), `Infrastructure/Auth/ClaimsPrincipalFactory.cs`, `Features/Users/UsersEndpoints.cs`.
+
+Logout: `GET /account/logout` calls `HttpContext.SignOutAsync()` and redirects home.
+
+**`AuthorizeView` in Blazor pages/layouts:** add `@using Microsoft.AspNetCore.Components.Authorization` to `Components/_Imports.razor` — it is not included by default and the component will appear as an unknown element without it.
+
 ### Blazor
 - Keep pages thin — send MediatR requests directly rather than round-tripping via HTTP.
 - Use `@rendermode InteractiveServer` only where needed; default to static SSR.
@@ -69,3 +88,4 @@ WorldCuppy/
 - `MudThemeProvider`, `MudPopoverProvider`, `MudDialogProvider`, and `MudSnackbarProvider` must stay in `MainLayout.razor` — do not add them to individual pages.
 - The World Cup theme (FIFA green `#1a5c38` primary, gold `#c9a02a` secondary) is defined in `MainLayout.razor`. Refer to `Color.Primary` / `Color.Secondary` rather than hard-coding hex values in pages.
 - Pages use `MudText`, `MudGrid`/`MudItem`, `MudCard`, `MudButton` as the baseline building blocks.
+- **MUD0002 analyzer:** HTML attributes on Mud components must be lowercase — `title` not `Title`, `class` not `Class` when used as a plain HTML pass-through. This is a build error (`TreatWarningsAsErrors=true`).
