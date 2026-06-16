@@ -15,6 +15,9 @@ public class WorldCuppyDbContext(DbContextOptions<WorldCuppyDbContext> options) 
     /// <summary>All user predictions.</summary>
     public DbSet<Prediction> Predictions => Set<Prediction>();
 
+    /// <summary>All registered users.</summary>
+    public DbSet<User> Users => Set<User>();
+
     /// <summary>Applies all <see cref="IEntityTypeConfiguration{T}" /> implementations found in this assembly.</summary>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

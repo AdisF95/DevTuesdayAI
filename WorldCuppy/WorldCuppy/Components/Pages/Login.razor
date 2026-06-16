@@ -1,0 +1,77 @@
+@page "/login"
+@rendermode InteractiveServer
+@using MediatR
+@using WorldCuppy.Features.Users
+@inject ISender Sender
+@inject NavigationManager Nav
+
+<PageTitle>Login — WorldCuppy</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudCard Elevation="3">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h5">Sign in</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Welcome back to WorldCuppy 2026</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+
+        <MudCardContent>
+            @if (_errorMessage is not null)
+            {
+                <MudAlert Severity="Severity.Error" Class="mb-4">@_errorMessage</MudAlert>
+            }
+
+            <MudTextField @bind-Value="_usernameOrEmail" Label="Username or Email" Variant="Variant.Outlined"
+                          Margin="Margin.Dense" Class="mb-3" Disabled="_loading" />
+
+            <MudTextField @bind-Value="_password" Label="Password" Variant="Variant.Outlined"
+                          InputType="InputType.Password" Margin="Margin.Dense" Class="mb-3"
+                          Disabled="_loading" />
+        </MudCardContent>
+
+        <MudCardActions Class="px-4 pb-4 d-flex flex-column gap-2">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                       OnClick="SubmitAsync" Disabled="_loading">
+                @if (_loading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                }
+                Sign in
+            </MudButton>
+            <MudText Typo="Typo.body2" Align="Align.Center">
+                Don't have an account? <MudLink Href="/register">Register</MudLink>
+            </MudText>
+        </MudCardActions>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private string _usernameOrEmail = string.Empty;
+    private string _password = string.Empty;
+    private string? _errorMessage;
+    private bool _loading;
+
+    /// <summary>Sends <see cref="LoginUserQuery" />, then redirects through the cookie sign-in endpoint.</summary>
+    private async Task SubmitAsync()
+    {
+        _errorMessage = null;
+        _loading = true;
+
+        try
+        {
+            var token = await Sender.Send(new LoginUserQuery(_usernameOrEmail.Trim(), _password));
+            Nav.NavigateTo($"/account/complete-auth/{token}", forceLoad: true);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _errorMessage = ex.Message;
+            _loading = false;
+        }
+        catch (Exception)
+        {
+            _errorMessage = "Something went wrong. Please try again.";
+            _loading = false;
+        }
+    }
+}
