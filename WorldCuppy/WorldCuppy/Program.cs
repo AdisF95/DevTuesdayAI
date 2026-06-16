@@ -14,6 +14,7 @@ builder.Services.AddMudServices();
 
 builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddApplication();
+builder.Services.AddAuth();
 builder.Services.AddFootballData(builder.Configuration);
 builder.Services.AddHangfireWithPostgres(builder.Configuration);
 builder.Services.AddOpenApi();
@@ -49,6 +50,8 @@ if (!app.Environment.IsEnvironment("Development") || !IsRunningInContainer())
 static bool IsRunningInContainer() =>
     Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
 app.UseAntiforgery();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

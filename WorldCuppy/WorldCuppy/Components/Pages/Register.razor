@@ -1,0 +1,77 @@
+@page "/register"
+@rendermode InteractiveServer
+@using MediatR
+@using WorldCuppy.Features.Users
+@inject ISender Sender
+@inject NavigationManager Nav
+
+<PageTitle>Register — WorldCuppy</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudCard Elevation="3">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h5">Create an account</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Join the 2026 World Cup prediction game</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+
+        <MudCardContent>
+            @if (_errorMessage is not null)
+            {
+                <MudAlert Severity="Severity.Error" Class="mb-4">@_errorMessage</MudAlert>
+            }
+
+            <MudTextField @bind-Value="_username" Label="Username" Variant="Variant.Outlined"
+                          HelperText="3–50 characters, letters/numbers/underscores only"
+                          Margin="Margin.Dense" Class="mb-3" Disabled="_loading" />
+
+            <MudTextField @bind-Value="_email" Label="Email" Variant="Variant.Outlined"
+                          InputType="InputType.Email" Margin="Margin.Dense" Class="mb-3" Disabled="_loading" />
+
+            <MudTextField @bind-Value="_password" Label="Password" Variant="Variant.Outlined"
+                          InputType="InputType.Password" HelperText="At least 8 characters"
+                          Margin="Margin.Dense" Class="mb-3" Disabled="_loading" />
+        </MudCardContent>
+
+        <MudCardActions Class="px-4 pb-4 d-flex flex-column gap-2">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                       OnClick="SubmitAsync" Disabled="_loading">
+                @if (_loading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                }
+                Create account
+            </MudButton>
+            <MudText Typo="Typo.body2" Align="Align.Center">
+                Already have an account? <MudLink Href="/login">Sign in</MudLink>
+            </MudText>
+        </MudCardActions>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private string _username = string.Empty;
+    private string _email = string.Empty;
+    private string _password = string.Empty;
+    private string? _errorMessage;
+    private bool _loading;
+
+    /// <summary>Sends <see cref="RegisterUserCommand" />, then redirects through the cookie sign-in endpoint.</summary>
+    private async Task SubmitAsync()
+    {
+        _errorMessage = null;
+        _loading = true;
+
+        try
+        {
+            var token = await Sender.Send(new RegisterUserCommand(_username.Trim(), _email.Trim(), _password));
+            Nav.NavigateTo($"/account/complete-auth/{token}", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+            _loading = false;
+        }
+    }
+}
