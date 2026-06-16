@@ -15,6 +15,6 @@ public class GetTeamsHandler(WorldCuppyDbContext db)
     public Task<List<TeamResponse>> Handle(GetTeamsQuery request, CancellationToken cancellationToken) =>
         db.Teams
             .OrderBy(t => t.Name)
-            .Select(t => new TeamResponse(t.Id, t.Name, t.Code))
+            .Select(t => new TeamResponse(t.Id, t.Name, t.Code, t.CrestUrl))
             .ToListAsync(cancellationToken);
 }

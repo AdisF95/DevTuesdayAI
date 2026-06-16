@@ -4,6 +4,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
       - ConnectionStrings__Default=Host=postgres;Database=worldcuppy;Username=postgres;Password=Dev@12345!
+      - FootballData__ApiKey=18e7c7f1091842c783c4bf67ed815ee3
     ports:
       - "5048:8080"
     volumes:

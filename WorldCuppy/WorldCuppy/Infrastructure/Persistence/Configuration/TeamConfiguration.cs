@@ -11,5 +11,7 @@ public class TeamConfiguration : IEntityTypeConfiguration<Team>
         builder.HasKey(t => t.Id);
         builder.Property(t => t.Name).HasMaxLength(100).IsRequired();
         builder.Property(t => t.Code).HasMaxLength(3).IsRequired();
+        builder.Property(t => t.CrestUrl).HasMaxLength(500);
+        builder.HasIndex(t => t.ExternalId).IsUnique();
     }
 }

@@ -15,6 +15,6 @@ public class GetTeamByCodeHandler(WorldCuppyDbContext db)
     public Task<TeamResponse?> Handle(GetTeamByCodeQuery request, CancellationToken cancellationToken) =>
         db.Teams
             .Where(t => t.Code.Equals(request.Code, StringComparison.OrdinalIgnoreCase))
-            .Select(t => new TeamResponse(t.Id, t.Name, t.Code))
+            .Select(t => new TeamResponse(t.Id, t.Name, t.Code, t.CrestUrl))
             .FirstOrDefaultAsync(cancellationToken);
 }

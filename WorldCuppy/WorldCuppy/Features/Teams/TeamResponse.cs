@@ -4,5 +4,6 @@ namespace WorldCuppy.Features.Teams;
 public record TeamResponse(
     Guid Id,
     string Name,
-    string Code
+    string Code,
+    string? CrestUrl
 );

@@ -14,6 +14,8 @@ builder.Services.AddMudServices();
 
 builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddApplication();
+builder.Services.AddFootballData(builder.Configuration);
+builder.Services.AddHangfireWithPostgres(builder.Configuration);
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
@@ -52,5 +54,6 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.MapAllEndpoints();
+app.UseHangfire();
 
 app.Run();

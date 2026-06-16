@@ -1,6 +1,7 @@
 using WorldCuppy.Features.Leaderboard;
 using WorldCuppy.Features.Matches;
 using WorldCuppy.Features.Predictions;
+using WorldCuppy.Features.Sync;
 using WorldCuppy.Features.Teams;
 
 namespace WorldCuppy.Infrastructure.Extensions;
@@ -15,6 +16,7 @@ public static class EndpointExtensions
         LeaderboardEndpoints.MapEndpoints(app);
         PredictionsEndpoints.MapEndpoints(app);
         TeamsEndpoints.MapEndpoints(app);
+        SyncEndpoints.MapEndpoints(app);
         return app;
     }
 }
