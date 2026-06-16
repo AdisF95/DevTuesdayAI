@@ -18,6 +18,15 @@ public class WorldCuppyDbContext(DbContextOptions<WorldCuppyDbContext> options) 
     /// <summary>All registered users.</summary>
     public DbSet<User> Users => Set<User>();
 
+    /// <summary>Goal events for finished matches.</summary>
+    public DbSet<GoalEvent> GoalEvents => Set<GoalEvent>();
+
+    /// <summary>Booking (card) events for finished matches.</summary>
+    public DbSet<BookingEvent> BookingEvents => Set<BookingEvent>();
+
+    /// <summary>Group stage standings, synced from football-data.org.</summary>
+    public DbSet<GroupStanding> GroupStandings => Set<GroupStanding>();
+
     /// <summary>Applies all <see cref="IEntityTypeConfiguration{T}" /> implementations found in this assembly.</summary>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

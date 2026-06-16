@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using WorldCuppy.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using WorldCuppy.Infrastructure.Persistence;
 namespace WorldCuppy.Migrations
 {
     [DbContext(typeof(WorldCuppyDbContext))]
-    partial class WorldCuppyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260616133110_AddMatchEventsAndStandings")]
+    partial class AddMatchEventsAndStandings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -159,9 +162,6 @@ namespace WorldCuppy.Migrations
 
                     b.Property<Guid>("AwayTeamId")
                         .HasColumnType("uuid");
-
-                    b.Property<bool>("EventsSynced")
-                        .HasColumnType("boolean");
 
                     b.Property<int>("ExternalId")
                         .HasColumnType("integer");

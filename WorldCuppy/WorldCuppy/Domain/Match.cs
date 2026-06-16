@@ -44,4 +44,38 @@ public class Match
 
     /// <summary>Full-time away team score; null until the match is finished.</summary>
     public int? AwayScore { get; set; }
+
+    /// <summary>Half-time home score; null until half-time is reached.</summary>
+    public int? HalfTimeHomeScore { get; set; }
+
+    /// <summary>Half-time away score; null until half-time is reached.</summary>
+    public int? HalfTimeAwayScore { get; set; }
+
+    /// <summary>Extra-time home score; null unless the match went to extra time.</summary>
+    public int? ExtraTimeHomeScore { get; set; }
+
+    /// <summary>Extra-time away score; null unless the match went to extra time.</summary>
+    public int? ExtraTimeAwayScore { get; set; }
+
+    /// <summary>Penalty-shootout home score; null unless the match was decided by penalties.</summary>
+    public int? PenaltyHomeScore { get; set; }
+
+    /// <summary>Penalty-shootout away score; null unless the match was decided by penalties.</summary>
+    public int? PenaltyAwayScore { get; set; }
+
+    /// <summary>How the match was concluded: REGULAR, EXTRA_TIME, or PENALTY_SHOOTOUT.</summary>
+    public string? MatchDuration { get; set; }
+
+    /// <summary>
+    /// True once the match detail endpoint has been successfully called for this match.
+    /// Prevents re-fetching matches that have 0 goals or 0 bookings from appearing
+    /// as un-synced on every cycle.
+    /// </summary>
+    public bool EventsSynced { get; set; }
+
+    /// <summary>Goals scored in this match, ordered by minute.</summary>
+    public List<GoalEvent> GoalEvents { get; set; } = [];
+
+    /// <summary>Bookings (yellow/red cards) issued during this match.</summary>
+    public List<BookingEvent> BookingEvents { get; set; } = [];
 }

@@ -1,4 +1,6 @@
+@using MediatR
 @using WorldCuppy.Features.Matches
+@inject ISender Sender
 
 <MudDialog>
     <TitleContent>
@@ -6,8 +8,8 @@
     </TitleContent>
     <DialogContent>
 
-        @* Teams row *@
-        <div class="d-flex align-center justify-space-between gap-3 mb-4">
+        @* Teams + score row *@
+        <div class="d-flex align-center justify-space-between gap-3 mb-3">
 
             @* Home team *@
             <div class="d-flex flex-column align-center gap-1 flex-1">
@@ -23,13 +25,31 @@
                 <MudText Typo="Typo.caption" Style="opacity:.7">@Match.HomeTeamCode</MudText>
             </div>
 
-            @* Centre: score or kickoff *@
-            <div class="d-flex flex-column align-center mx-2">
+            @* Centre: score breakdown or kickoff *@
+            <div class="d-flex flex-column align-center mx-2" style="min-width:120px">
                 @if (Match.Status is "Finished" or "Live")
                 {
                     <MudText Typo="Typo.h4" Style="font-weight:700;letter-spacing:3px">
                         @Match.HomeScore&nbsp;–&nbsp;@Match.AwayScore
                     </MudText>
+                    @if (_detail?.HalfTimeHomeScore is not null)
+                    {
+                        <MudText Typo="Typo.caption" Style="opacity:.6">
+                            HT: @_detail.HalfTimeHomeScore – @_detail.HalfTimeAwayScore
+                        </MudText>
+                    }
+                    @if (_detail?.MatchDuration is "EXTRA_TIME" or "PENALTY_SHOOTOUT")
+                    {
+                        <MudText Typo="Typo.caption" Style="opacity:.6">
+                            AET: @_detail.ExtraTimeHomeScore – @_detail.ExtraTimeAwayScore
+                        </MudText>
+                    }
+                    @if (_detail?.MatchDuration is "PENALTY_SHOOTOUT")
+                    {
+                        <MudText Typo="Typo.caption" Style="opacity:.6">
+                            Pens: @_detail.PenaltyHomeScore – @_detail.PenaltyAwayScore
+                        </MudText>
+                    }
                 }
                 else
                 {
@@ -37,7 +57,7 @@
                     <MudText Typo="Typo.subtitle2" Style="opacity:.7">@KickoffCet(Match.KickoffUtc)</MudText>
                 }
                 <MudChip T="string" Size="Size.Small" Color="@StatusColor(Match.Status)" Variant="Variant.Filled" Class="mt-1">
-                    @Match.Status
+                    @DurationLabel(_detail?.MatchDuration, Match.Status)
                 </MudChip>
             </div>
 
@@ -60,7 +80,7 @@
         <MudDivider Class="mb-3" />
 
         @* Match metadata *@
-        <MudGrid>
+        <MudGrid Class="mb-3">
             <MudItem xs="6">
                 <MudText Typo="Typo.caption" Style="opacity:.7">Date</MudText>
                 <MudText Typo="Typo.body2">@Match.GameDay.ToString("dddd, d MMMM yyyy")</MudText>
@@ -79,6 +99,55 @@
             </MudItem>
         </MudGrid>
 
+        @* Events section — shown once detail has loaded *@
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="my-2" />
+        }
+        else if (_detail is not null && (_detail.Goals.Count > 0 || _detail.Bookings.Count > 0))
+        {
+            <MudDivider Class="mb-3" />
+
+            @* Goal timeline *@
+            @if (_detail.Goals.Count > 0)
+            {
+                <MudText Typo="Typo.subtitle2" Class="mb-2" Style="opacity:.8">Goals</MudText>
+                @foreach (var goal in _detail.Goals)
+                {
+                    <div class="d-flex align-center mb-1 @(goal.IsHomeTeam ? "justify-start" : "justify-end")">
+                        @if (goal.IsHomeTeam)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.SportsSoccer" Size="Size.Small" Color="Color.Success" Class="mr-1" />
+                            <MudText Typo="Typo.body2">
+                                @goal.Minute' @GoalLabel(goal)
+                            </MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2">
+                                @GoalLabel(goal) @goal.Minute'
+                            </MudText>
+                            <MudIcon Icon="@Icons.Material.Filled.SportsSoccer" Size="Size.Small" Color="Color.Success" Class="ml-1" />
+                        }
+                    </div>
+                }
+            }
+
+            @* Cards *@
+            @if (_detail.Bookings.Count > 0)
+            {
+                <MudText Typo="Typo.subtitle2" Class="mt-3 mb-2" Style="opacity:.8">Discipline</MudText>
+                @foreach (var booking in _detail.Bookings)
+                {
+                    <div class="d-flex align-center mb-1 @(booking.IsHomeTeam ? "justify-start" : "justify-end")">
+                        <MudText Typo="Typo.body2">
+                            @CardIcon(booking.CardType) @booking.Minute' @(booking.PlayerName ?? "Unknown")
+                        </MudText>
+                    </div>
+                }
+            }
+        }
+
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Close" Color="Color.Primary" Variant="Variant.Text">Close</MudButton>
@@ -89,21 +158,31 @@
     /// <summary>Cascading dialog instance used to close this dialog.</summary>
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
 
-    /// <summary>The match to display details for.</summary>
+    /// <summary>Basic match data shown immediately while detail loads.</summary>
     [Parameter, EditorRequired] public required MatchResponse Match { get; set; }
+
+    private MatchDetailResponse? _detail;
+    private bool _loading = true;
 
     // Europe/Berlin covers both CET (UTC+1, winter) and CEST (UTC+2, summer) automatically.
     private static readonly TimeZoneInfo CetZone =
         TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
+
+    /// <summary>Fetches full match detail (goals, cards, extended scores) after the dialog opens.</summary>
+    protected override async Task OnInitializedAsync()
+    {
+        _detail  = await Sender.Send(new GetMatchDetailQuery(Match.Id));
+        _loading = false;
+    }
 
     private void Close() => MudDialog.Close();
 
     /// <summary>Converts a UTC kickoff time to CET/CEST and formats it with the correct abbreviation.</summary>
     private static string KickoffCet(DateTimeOffset kickoffUtc)
     {
-        var local = TimeZoneInfo.ConvertTimeFromUtc(kickoffUtc.UtcDateTime, CetZone);
+        var local  = TimeZoneInfo.ConvertTimeFromUtc(kickoffUtc.UtcDateTime, CetZone);
         var offset = CetZone.GetUtcOffset(kickoffUtc.UtcDateTime);
-        var label = offset.Hours == 1 ? "CET" : "CEST";
+        var label  = offset.Hours == 1 ? "CET" : "CEST";
         return $"{local:HH:mm} {label}";
     }
 
@@ -124,6 +203,33 @@
             _              => "—",
         };
     }
+
+    private static string GoalLabel(GoalEventResponse goal)
+    {
+        var name   = goal.ScorerName ?? "Unknown";
+        var suffix = goal.Type switch
+        {
+            "OWN_GOAL" => " (og)",
+            "PENALTY"  => " (pen)",
+            _          => string.Empty,
+        };
+        var assist = goal.AssistName is not null ? $" ↗ {goal.AssistName}" : string.Empty;
+        return $"{name}{suffix}{assist}";
+    }
+
+    private static string CardIcon(string cardType) => cardType switch
+    {
+        "RED_CARD"         => "🟥",
+        "YELLOW_RED_CARD"  => "🟨🟥",
+        _                  => "🟨",
+    };
+
+    private static string DurationLabel(string? duration, string status) => duration switch
+    {
+        "EXTRA_TIME"         => "AET",
+        "PENALTY_SHOOTOUT"   => "Pens",
+        _                    => status,
+    };
 
     private static Color StatusColor(string status) => status switch
     {

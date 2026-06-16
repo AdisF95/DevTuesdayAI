@@ -1,0 +1,124 @@
+@page "/groups"
+@using MediatR
+@using WorldCuppy.Features.Groups
+@inject ISender Sender
+
+<PageTitle>Groups — WorldCuppy 2026</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">Group Stage Standings</MudText>
+
+@if (_groups is null)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mb-4" />
+}
+else if (_groups.Count == 0)
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+        Standings are not yet available. They will appear once the group stage begins.
+    </MudAlert>
+}
+else
+{
+    <MudGrid>
+        @foreach (var (groupKey, rows) in _groups)
+        {
+            <MudItem xs="12" sm="6" lg="4">
+                <MudCard Elevation="2" Class="mb-2">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Group @groupKey.Replace("GROUP_", string.Empty)</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent Class="pa-0">
+                        <MudSimpleTable Dense="true" Hover="true" Style="overflow:hidden">
+                            <thead>
+                                <tr>
+                                    <th style="width:28px">#</th>
+                                    <th>Team</th>
+                                    <th title="Played" style="width:32px;text-align:center">P</th>
+                                    <th title="Won" style="width:32px;text-align:center">W</th>
+                                    <th title="Drawn" style="width:32px;text-align:center">D</th>
+                                    <th title="Lost" style="width:32px;text-align:center">L</th>
+                                    <th title="Goals For" style="width:36px;text-align:center">GF</th>
+                                    <th title="Goals Against" style="width:36px;text-align:center">GA</th>
+                                    <th title="Goal Difference" style="width:36px;text-align:center">GD</th>
+                                    <th title="Points" style="width:36px;text-align:center;font-weight:700">Pts</th>
+                                    <th title="Last 5" style="min-width:80px">Form</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in rows)
+                                {
+                                    <tr>
+                                        <td>@row.Position</td>
+                                        <td>
+                                            <div class="d-flex align-center gap-1">
+                                                @if (row.TeamCrest is not null)
+                                                {
+                                                    <img src="@row.TeamCrest" alt="@row.TeamCode" style="width:20px;height:20px;object-fit:contain" />
+                                                }
+                                                <MudText Typo="Typo.body2" Style="font-weight:500">@row.TeamCode</MudText>
+                                            </div>
+                                        </td>
+                                        <td style="text-align:center">@row.PlayedGames</td>
+                                        <td style="text-align:center">@row.Won</td>
+                                        <td style="text-align:center">@row.Draw</td>
+                                        <td style="text-align:center">@row.Lost</td>
+                                        <td style="text-align:center">@row.GoalsFor</td>
+                                        <td style="text-align:center">@row.GoalsAgainst</td>
+                                        <td style="text-align:center">@(row.GoalDifference > 0 ? $"+{row.GoalDifference}" : row.GoalDifference.ToString())</td>
+                                        <td style="text-align:center;font-weight:700">@row.Points</td>
+                                        <td>
+                                            <div class="d-flex gap-1">
+                                                @foreach (var result in ParseForm(row.Form))
+                                                {
+                                                    <MudChip T="string" Size="Size.Small"
+                                                             Color="@FormColor(result)"
+                                                             Variant="Variant.Filled"
+                                                             Style="min-width:24px;height:22px;padding:0;font-size:11px">
+                                                        @result
+                                                    </MudChip>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </MudSimpleTable>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+@code {
+    private Dictionary<string, List<GroupStandingResponse>>? _groups;
+
+    /// <summary>Loads all group standings and groups them by their group key on initialization.</summary>
+    protected override async Task OnInitializedAsync()
+    {
+        var rows = await Sender.Send(new GetGroupStandingsQuery());
+        _groups = rows
+            .GroupBy(r => r.Group)
+            .OrderBy(g => g.Key)
+            .ToDictionary(g => g.Key, g => g.ToList());
+    }
+
+    private static IEnumerable<string> ParseForm(string? form)
+    {
+        if (string.IsNullOrWhiteSpace(form))
+        {
+            return [];
+        }
+
+        return form.Split(',', StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    private static Color FormColor(string result) => result switch
+    {
+        "W" => Color.Success,
+        "L" => Color.Error,
+        _   => Color.Warning, // D
+    };
+}
