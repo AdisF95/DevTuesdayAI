@@ -5,6 +5,7 @@
 | Layer | Technology |
 |---|---|
 | Frontend | Blazor Server (.NET 10, Interactive Server Components) |
+| UI Components | MudBlazor 9 (Material Design component library) |
 | Backend | ASP.NET Core Minimal API (.NET 10) |
 | ORM | Entity Framework Core (PostgreSQL) |
 | Messaging | MediatR (CQRS — commands, queries, notifications) |
@@ -61,3 +62,10 @@ WorldCuppy/
 ### Blazor
 - Keep pages thin — send MediatR requests directly rather than round-tripping via HTTP.
 - Use `@rendermode InteractiveServer` only where needed; default to static SSR.
+
+### MudBlazor
+- Use MudBlazor components for all UI — no raw `<button>`, `<input>`, `<table>`, `<form>` when a Mud equivalent exists.
+- Do not introduce other CSS frameworks (Bootstrap, Tailwind, etc.) — MudBlazor handles all styling.
+- `MudThemeProvider`, `MudPopoverProvider`, `MudDialogProvider`, and `MudSnackbarProvider` must stay in `MainLayout.razor` — do not add them to individual pages.
+- The World Cup theme (FIFA green `#1a5c38` primary, gold `#c9a02a` secondary) is defined in `MainLayout.razor`. Refer to `Color.Primary` / `Color.Secondary` rather than hard-coding hex values in pages.
+- Pages use `MudText`, `MudGrid`/`MudItem`, `MudCard`, `MudButton` as the baseline building blocks.

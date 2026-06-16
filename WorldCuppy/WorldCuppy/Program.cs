@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using MudBlazor.Services;
 using Scalar.AspNetCore;
 using WorldCuppy.Components;
 using WorldCuppy.Infrastructure.Extensions;
@@ -8,6 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddMudServices();
 
 builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddApplication();

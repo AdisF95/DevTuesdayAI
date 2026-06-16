@@ -1,9 +1,81 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
-@Body
+<MudThemeProvider Theme="_theme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="2" Color="Color.Primary">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
+                       OnClick="@(() => _drawerOpen = !_drawerOpen)" />
+        <MudText Typo="Typo.h6" Class="ml-2 fw-bold">⚽ WorldCuppy 2026</MudText>
+        <MudSpacer />
+        <MudText Typo="Typo.body2" Class="d-none d-sm-flex">FIFA World Cup Predictions</MudText>
+    </MudAppBar>
+
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="1" Variant="DrawerVariant.Responsive">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">⚽ WorldCuppy</MudText>
+        </MudDrawerHeader>
+        <MudNavMenu>
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+            <MudNavLink Href="/predictions" Icon="@Icons.Material.Filled.SportsSoccer">Predictions</MudNavLink>
+            <MudNavLink Href="/leaderboard" Icon="@Icons.Material.Filled.EmojiEvents">Leaderboard</MudNavLink>
+            <MudNavLink Href="/matches" Icon="@Icons.Material.Filled.Schedule">Matches</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    private bool _drawerOpen = true;
+
+    /// <summary>World Cup-themed MudBlazor palette: deep green primary, gold secondary.</summary>
+    private readonly MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#1a5c38",        // FIFA green
+            PrimaryContrastText = "#ffffff",
+            Secondary = "#c9a02a",      // World Cup gold
+            SecondaryContrastText = "#000000",
+            AppbarBackground = "#1a5c38",
+            AppbarText = "#ffffff",
+            Background = "#f5f5f5",
+            Surface = "#ffffff",
+            DrawerBackground = "#ffffff",
+            DrawerText = "#1a5c38",
+            DrawerIcon = "#1a5c38",
+        },
+        PaletteDark = new PaletteDark
+        {
+            Primary = "#2e8b57",
+            PrimaryContrastText = "#ffffff",
+            Secondary = "#c9a02a",
+            SecondaryContrastText = "#000000",
+            AppbarBackground = "#1a3d26",
+            Background = "#121212",
+            Surface = "#1e1e1e",
+            DrawerBackground = "#1e1e1e",
+            DrawerText = "#c9a02a",
+            DrawerIcon = "#c9a02a",
+        },
+        Typography = new Typography
+        {
+            Default = new DefaultTypography { FontFamily = ["Roboto", "Helvetica", "Arial", "sans-serif"] },
+            H6 = new H6Typography { FontWeight = "700" },
+        },
+    };
+}

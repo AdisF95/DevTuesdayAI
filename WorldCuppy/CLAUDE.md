@@ -37,3 +37,5 @@ Default to **Sonnet** when in doubt. Escalate to **Opus** only when the task req
 - **No `!` nullable suppressions** without a comment explaining why it is safe.
 - **Do not add packages without discussing first.**
 - **Never remove comments from existing code.** If a comment is stale, update it — don't delete it.
+- **No other CSS frameworks.** MudBlazor handles all styling — never add Bootstrap, Tailwind, or any other CSS library.
+- **No raw HTML form/interactive elements.** Use MudBlazor equivalents (`MudButton`, `MudTextField`, `MudSelect`, `MudDataGrid`, etc.) instead of bare `<button>`, `<input>`, `<table>`, `<form>`.

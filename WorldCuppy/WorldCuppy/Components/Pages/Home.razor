@@ -1,7 +1,54 @@
-﻿@page "/"
+@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>WorldCuppy 2026</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudText Typo="Typo.h4" GutterBottom="true">Welcome to WorldCuppy 2026</MudText>
+<MudText Typo="Typo.subtitle1" Class="mb-6">
+    Predict FIFA World Cup knockout match scores and compete on the leaderboard.
+</MudText>
 
-Welcome to your new app.
+<MudGrid>
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard Elevation="2">
+            <MudCardMedia Image="https://upload.wikimedia.org/wikipedia/en/thumb/e/e3/2026_FIFA_World_Cup.svg/200px-2026_FIFA_World_Cup.svg.png"
+                          Height="160" />
+            <MudCardContent>
+                <MudText Typo="Typo.h6">Make Predictions</MudText>
+                <MudText Typo="Typo.body2">
+                    Submit your scoreline predictions before kickoff. Exact scores earn 3 pts; correct result earns 1 pt.
+                </MudText>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/predictions">Go to Predictions</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard Elevation="2">
+            <MudCardContent>
+                <MudText Typo="Typo.h6">Leaderboard</MudText>
+                <MudText Typo="Typo.body2">
+                    See how you rank against other predictors. Updated automatically after every result.
+                </MudText>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/leaderboard">View Leaderboard</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard Elevation="2">
+            <MudCardContent>
+                <MudText Typo="Typo.h6">Match Schedule</MudText>
+                <MudText Typo="Typo.body2">
+                    Browse all knockout fixtures — Round of 32 through to the Final.
+                </MudText>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/matches">View Matches</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+</MudGrid>
