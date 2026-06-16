@@ -10,7 +10,7 @@ Quick-reference for what exists in the codebase. Update this file whenever a fea
 |---|---|---|---|
 | **Users** | `RegisterUserCommand`, `LoginUserQuery`, `RegisterUserValidator` | `GET /account/complete-auth/{token}`, `GET /account/logout` | `/register`, `/login` |
 | **Predictions** | `CreatePredictionCommand`, `CreatePredictionValidator`, `GetPredictionsByUserQuery` | `POST /api/v1/predictions`, `GET /api/v1/predictions/user/{userId}` | `/predictions` *(nav link exists, page not yet built)* |
-| **Matches** | `GetMatchByIdQuery`, `GetMatchesByGameDayQuery` | `GET /api/v1/matches/{id}`, `GET /api/v1/matches?gameDay=` | `/matches` *(nav link exists, page not yet built)* |
+| **Matches** | `GetMatchByIdQuery`, `GetMatchesByGameDayQuery`, `GetAllMatchesQuery` | `GET /api/v1/matches/{id}`, `GET /api/v1/matches?gameDay=` | `/matches` — scroll view of all matches grouped by day, auto-scrolls to today, matchday filter chips, click-to-detail dialog |
 | **Teams** | `GetTeamsQuery`, `GetTeamByCodeQuery` | `GET /api/v1/teams`, `GET /api/v1/teams/{code}` | — |
 | **Leaderboard** | `GetLeaderboardQuery`, `LeaderboardCalculator` (internal static) | `GET /api/v1/leaderboard` | `/leaderboard` *(nav link exists, page not yet built)* |
 | **Sync** | `SyncCommand`, `SyncJob` (Hangfire) | `POST /api/v1/sync` (manual trigger) | — |
@@ -42,8 +42,9 @@ Quick-reference for what exists in the codebase. Update this file whenever a fea
 | `/` | `Pages/Home.razor` | Static SSR | Today/tomorrow match schedule via `GetMatchesByGameDayQuery` |
 | `/login` | `Pages/Login.razor` | Interactive Server | Login form → `LoginUserQuery` → cookie via PendingAuthStore |
 | `/register` | `Pages/Register.razor` | Interactive Server | Register form → `RegisterUserCommand` → cookie via PendingAuthStore |
+| `/matches` | `Pages/Matches.razor` | Interactive Server | All matches grouped by day; matchday filter chips; auto-scrolls to today on load; click a card to open `MatchDetailDialog` |
 
-**Shared components:** `Matches/MatchCard.razor`, `Matches/MatchDaySection.razor`
+**Shared components:** `Matches/MatchCard.razor`, `Matches/MatchDaySection.razor`, `Matches/MatchDetailDialog.razor`
 
 ---
 

@@ -1,5 +1,6 @@
 @using WorldCuppy.Features.Matches
 
+<div @onclick="HandleClick" style="@ClickStyle">
 <MudPaper Elevation="2" Class="@($"pa-4 {Class}")">
 
     @* Teams + score/time row *@
@@ -68,6 +69,7 @@
     </div>
 
 </MudPaper>
+</div>
 
 @code {
     /// <summary>The match data to render.</summary>
@@ -76,9 +78,16 @@
     /// <summary>Additional CSS classes forwarded to the outer MudPaper.</summary>
     [Parameter] public string? Class { get; set; }
 
+    /// <summary>Optional click handler; when set the card becomes interactive.</summary>
+    [Parameter] public EventCallback<MatchResponse> OnClick { get; set; }
+
     // Europe/Berlin covers both CET (UTC+1, winter) and CEST (UTC+2, summer) automatically.
     private static readonly TimeZoneInfo CetZone =
         TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
+
+    private string ClickStyle => OnClick.HasDelegate ? "cursor:pointer" : string.Empty;
+
+    private Task HandleClick() => OnClick.HasDelegate ? OnClick.InvokeAsync(Match) : Task.CompletedTask;
 
     private bool HasVenue => !string.IsNullOrEmpty(Match.Venue) && Match.Venue != "TBD";
 

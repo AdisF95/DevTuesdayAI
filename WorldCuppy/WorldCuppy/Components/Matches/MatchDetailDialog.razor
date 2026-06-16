@@ -1,0 +1,136 @@
+@using WorldCuppy.Features.Matches
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Match Details</MudText>
+    </TitleContent>
+    <DialogContent>
+
+        @* Teams row *@
+        <div class="d-flex align-center justify-space-between gap-3 mb-4">
+
+            @* Home team *@
+            <div class="d-flex flex-column align-center gap-1 flex-1">
+                @if (Match.HomeTeamCrest is not null)
+                {
+                    <img src="@Match.HomeTeamCrest" alt="@Match.HomeTeam" style="width:64px;height:64px;object-fit:contain" />
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.SportsSoccer" Size="Size.Large" />
+                }
+                <MudText Typo="Typo.subtitle1" Style="font-weight:600;text-align:center">@Match.HomeTeam</MudText>
+                <MudText Typo="Typo.caption" Style="opacity:.7">@Match.HomeTeamCode</MudText>
+            </div>
+
+            @* Centre: score or kickoff *@
+            <div class="d-flex flex-column align-center mx-2">
+                @if (Match.Status is "Finished" or "Live")
+                {
+                    <MudText Typo="Typo.h4" Style="font-weight:700;letter-spacing:3px">
+                        @Match.HomeScore&nbsp;–&nbsp;@Match.AwayScore
+                    </MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.h5" Style="font-weight:600">vs</MudText>
+                    <MudText Typo="Typo.subtitle2" Style="opacity:.7">@KickoffCet(Match.KickoffUtc)</MudText>
+                }
+                <MudChip T="string" Size="Size.Small" Color="@StatusColor(Match.Status)" Variant="Variant.Filled" Class="mt-1">
+                    @Match.Status
+                </MudChip>
+            </div>
+
+            @* Away team *@
+            <div class="d-flex flex-column align-center gap-1 flex-1">
+                @if (Match.AwayTeamCrest is not null)
+                {
+                    <img src="@Match.AwayTeamCrest" alt="@Match.AwayTeam" style="width:64px;height:64px;object-fit:contain" />
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.SportsSoccer" Size="Size.Large" />
+                }
+                <MudText Typo="Typo.subtitle1" Style="font-weight:600;text-align:center">@Match.AwayTeam</MudText>
+                <MudText Typo="Typo.caption" Style="opacity:.7">@Match.AwayTeamCode</MudText>
+            </div>
+
+        </div>
+
+        <MudDivider Class="mb-3" />
+
+        @* Match metadata *@
+        <MudGrid>
+            <MudItem xs="6">
+                <MudText Typo="Typo.caption" Style="opacity:.7">Date</MudText>
+                <MudText Typo="Typo.body2">@Match.GameDay.ToString("dddd, d MMMM yyyy")</MudText>
+            </MudItem>
+            <MudItem xs="6">
+                <MudText Typo="Typo.caption" Style="opacity:.7">Kickoff (CET/CEST)</MudText>
+                <MudText Typo="Typo.body2">@KickoffCet(Match.KickoffUtc)</MudText>
+            </MudItem>
+            <MudItem xs="6">
+                <MudText Typo="Typo.caption" Style="opacity:.7">Stage</MudText>
+                <MudText Typo="Typo.body2">@FormatStage(Match.Group, Match.Round)</MudText>
+            </MudItem>
+            <MudItem xs="6">
+                <MudText Typo="Typo.caption" Style="opacity:.7">Venue</MudText>
+                <MudText Typo="Typo.body2">@(string.IsNullOrEmpty(Match.Venue) || Match.Venue == "TBD" ? "TBD" : Match.Venue)</MudText>
+            </MudItem>
+        </MudGrid>
+
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close" Color="Color.Primary" Variant="Variant.Text">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    /// <summary>Cascading dialog instance used to close this dialog.</summary>
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    /// <summary>The match to display details for.</summary>
+    [Parameter, EditorRequired] public required MatchResponse Match { get; set; }
+
+    // Europe/Berlin covers both CET (UTC+1, winter) and CEST (UTC+2, summer) automatically.
+    private static readonly TimeZoneInfo CetZone =
+        TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
+
+    private void Close() => MudDialog.Close();
+
+    /// <summary>Converts a UTC kickoff time to CET/CEST and formats it with the correct abbreviation.</summary>
+    private static string KickoffCet(DateTimeOffset kickoffUtc)
+    {
+        var local = TimeZoneInfo.ConvertTimeFromUtc(kickoffUtc.UtcDateTime, CetZone);
+        var offset = CetZone.GetUtcOffset(kickoffUtc.UtcDateTime);
+        var label = offset.Hours == 1 ? "CET" : "CEST";
+        return $"{local:HH:mm} {label}";
+    }
+
+    private static string FormatStage(string? group, string? round)
+    {
+        if (group is not null)
+        {
+            return "Group " + group.Replace("GROUP_", string.Empty);
+        }
+
+        return round switch
+        {
+            "RoundOf32"    => "Round of 32",
+            "RoundOf16"    => "Round of 16",
+            "QuarterFinal" => "Quarter Final",
+            "SemiFinal"    => "Semi Final",
+            "Final"        => "Final",
+            _              => "—",
+        };
+    }
+
+    private static Color StatusColor(string status) => status switch
+    {
+        "Live"      => Color.Error,
+        "Finished"  => Color.Success,
+        "Postponed" => Color.Warning,
+        "Cancelled" => Color.Warning,
+        _           => Color.Default,
+    };
+}

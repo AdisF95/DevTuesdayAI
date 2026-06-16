@@ -1,0 +1,117 @@
+@page "/matches"
+@rendermode InteractiveServer
+@using MediatR
+@using WorldCuppy.Features.Matches
+@inject ISender Sender
+@inject IDialogService DialogService
+@inject IJSRuntime JS
+
+<PageTitle>Matches — WorldCuppy 2026</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">All Matches</MudText>
+
+@if (_matchesByDay is null)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mb-4" />
+}
+else
+{
+    @* Matchday filter chips *@
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        <MudChip T="string"
+                 Color="@(_selectedDay is null ? Color.Primary : Color.Default)"
+                 Variant="@(_selectedDay is null ? Variant.Filled : Variant.Outlined)"
+                 OnClick="@(() => SelectDay(null))">All</MudChip>
+        @foreach (var day in _matchesByDay.Keys)
+        {
+            var d = day;
+            <MudChip T="string"
+                     Color="@(_selectedDay == d ? Color.Primary : Color.Default)"
+                     Variant="@(_selectedDay == d ? Variant.Filled : Variant.Outlined)"
+                     OnClick="@(() => SelectDay(d))">
+                @d.ToString("d MMM")
+            </MudChip>
+        }
+    </div>
+
+    @* Match sections — one per game day *@
+    @foreach (var (day, matches) in DisplayedDays)
+    {
+        <div id="@DayId(day)" class="mb-6">
+            <MudText Typo="Typo.h6" Class="mb-3">
+                @DayLabel(day)
+                <MudText Typo="Typo.caption" Inline="true" Class="ml-2" Style="opacity:.7">
+                    @day.ToString("dddd, d MMMM yyyy")
+                </MudText>
+            </MudText>
+            @foreach (var match in matches)
+            {
+                var m = match;
+                <MatchCard Match="m" OnClick="@OpenDetail" Class="mb-3" />
+            }
+        </div>
+    }
+}
+
+@code {
+    private Dictionary<DateOnly, List<MatchResponse>>? _matchesByDay;
+    private DateOnly? _selectedDay;
+    private DateOnly _today;
+    private bool _pendingScrollToToday = true;
+
+    private IEnumerable<KeyValuePair<DateOnly, List<MatchResponse>>> DisplayedDays =>
+        _selectedDay is null
+            ? _matchesByDay!
+            : _matchesByDay!.Where(kvp => kvp.Key == _selectedDay);
+
+    /// <summary>Loads all matches and groups them by game day on initialization.</summary>
+    protected override async Task OnInitializedAsync()
+    {
+        _today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var all = await Sender.Send(new GetAllMatchesQuery());
+        _matchesByDay = all
+            .GroupBy(m => m.GameDay)
+            .OrderBy(g => g.Key)
+            .ToDictionary(g => g.Key, g => g.ToList());
+    }
+
+    /// <summary>Scrolls to today's section after the first interactive render and whenever the All filter is reselected.</summary>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_pendingScrollToToday && _matchesByDay is not null)
+        {
+            _pendingScrollToToday = false;
+            await JS.InvokeVoidAsync("scrollToElement", DayId(_today));
+        }
+    }
+
+    private void SelectDay(DateOnly? day)
+    {
+        _selectedDay = day;
+        if (day is null)
+        {
+            // Re-arm scroll so the page returns to today after clearing the filter
+            _pendingScrollToToday = true;
+        }
+    }
+
+    private async Task OpenDetail(MatchResponse match)
+    {
+        var parameters = new DialogParameters<MatchDetailDialog>();
+        parameters.Add(x => x.Match, match);
+        await DialogService.ShowAsync<MatchDetailDialog>(
+            string.Empty,
+            parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+    }
+
+    private static string DayId(DateOnly day) => $"day-{day:yyyy-MM-dd}";
+
+    private string DayLabel(DateOnly day)
+    {
+        if (day == _today) { return "Today"; }
+        if (day == _today.AddDays(1)) { return "Tomorrow"; }
+        if (day == _today.AddDays(-1)) { return "Yesterday"; }
+        return day.DayOfWeek.ToString();
+    }
+}
