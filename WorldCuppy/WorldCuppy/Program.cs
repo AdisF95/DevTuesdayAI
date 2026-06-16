@@ -37,7 +37,9 @@ app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages:
 
 // HTTPS is terminated outside the container in production; skip redirection when running in Docker.
 if (!app.Environment.IsEnvironment("Development") || !IsRunningInContainer())
+{
     app.UseHttpsRedirection();
+}
 
 static bool IsRunningInContainer() =>
     Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";

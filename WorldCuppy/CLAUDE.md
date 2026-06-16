@@ -1,5 +1,38 @@
 # WorldCuppy — Claude Code Guide
 
+## Guardrails
+
+### Branching
+- **Never commit directly to `main`.** All work happens on a feature branch (`git checkout -b feature/<name>`).
+- For parallel tasks, use git worktrees (`git worktree add`).
+- Open a PR and wait for human review before anything touches `main`. `git push` and `git merge` are blocked by tool permissions.
+
+### Commit rules
+- **Only commit green builds.** The pre-commit hook at `.claude/hooks/pre-commit-check.ps1` runs `dotnet build` + `dotnet test` before every `git commit`. A failing build or failing tests blocks the commit automatically.
+- Stage specific files — never `git add -A` blindly.
+
+### Tool permissions (`.claude/settings.json`)
+The following are **always allowed** without a prompt: reading files, building, testing, restoring, formatting, read-only git commands (`status`, `diff`, `log`, `branch`), staging files, and creating branches.
+
+The following are **always blocked**, even if asked: `git push`, checking out `main`/`master`, `git merge`, `git rebase`, `git reset --hard`, `git clean`, `dotnet ef database drop`, and recursive deletes.
+
+Everything else (destructive or irreversible operations) requires explicit user approval.
+
+### Static analysis
+`Directory.Build.props` enforces across all projects:
+- `TreatWarningsAsErrors=true` — warnings are build errors
+- `AnalysisMode=Recommended` — Roslyn recommended ruleset
+- `EnforceCodeStyleInBuild=true` — `.editorconfig` style rules are enforced at build time
+
+The `.editorconfig` at the solution root enforces: file-scoped namespaces, braces on all `if`/`for`/etc., sorted usings, and accessibility modifiers. EF Core `Migrations/` are exempted from namespace rules (EF generates block-scoped namespaces).
+
+### Human review required before
+- Merging any branch to `main`
+- Pushing to remote
+- Adding new NuGet packages
+- Running `dotnet ef database drop`
+- Any force-push or destructive git operation
+
 ## Domain
 
 WorldCuppy is a **2026 FIFA World Cup prediction game**. Users predict knockout match outcomes and score points based on accuracy.
