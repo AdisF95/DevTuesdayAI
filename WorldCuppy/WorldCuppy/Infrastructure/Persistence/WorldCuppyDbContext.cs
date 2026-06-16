@@ -7,6 +7,7 @@ public class WorldCuppyDbContext(DbContextOptions<WorldCuppyDbContext> options) 
 {
     public DbSet<Match> Matches => Set<Match>();
     public DbSet<Team> Teams => Set<Team>();
+    public DbSet<Prediction> Predictions => Set<Prediction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

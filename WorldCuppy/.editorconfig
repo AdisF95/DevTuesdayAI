@@ -37,10 +37,11 @@ dotnet_style_require_accessibility_modifiers = for_non_interface_members:warning
 dotnet_style_null_propagation = true:suggestion
 dotnet_style_coalesce_expression = true:suggestion
 
-# EF Core generates block-scoped namespaces — suppress style enforcement in Migrations
+# EF Core generates block-scoped namespaces and inline array args — suppress style enforcement in Migrations
 [**/Migrations/*.cs]
 csharp_style_namespace_declarations = block_scoped:none
 dotnet_diagnostic.IDE0161.severity = none
+dotnet_diagnostic.CA1861.severity = none
 
 [*.{json,yml,yaml}]
 indent_size = 2
