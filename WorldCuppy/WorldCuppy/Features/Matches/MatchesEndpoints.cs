@@ -3,13 +3,15 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace WorldCuppy.Features.Matches;
 
+/// <summary>Registers all Matches API routes.</summary>
 public static class MatchesEndpoints
 {
+    /// <summary>Maps Matches endpoints onto <paramref name="app" />.</summary>
     public static void MapEndpoints(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/matches").WithTags("Matches");
 
-        group.MapGet("/game-day/{date}", async (DateOnly date, ISender sender) =>
+        group.MapGet("/game-day/{date}", async Task<Ok<List<MatchResponse>>> (DateOnly date, ISender sender) =>
         {
             var matches = await sender.Send(new GetMatchesByGameDayQuery(date));
             return TypedResults.Ok(matches);

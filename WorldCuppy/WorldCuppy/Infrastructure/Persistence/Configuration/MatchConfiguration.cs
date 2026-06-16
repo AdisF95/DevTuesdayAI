@@ -4,8 +4,10 @@ using WorldCuppy.Domain;
 
 namespace WorldCuppy.Infrastructure.Persistence.Configuration;
 
+/// <summary>EF Core mapping configuration for <see cref="Match" />.</summary>
 public class MatchConfiguration : IEntityTypeConfiguration<Match>
 {
+    /// <summary>Configures table shape, constraints, and relationships for Match.</summary>
     public void Configure(EntityTypeBuilder<Match> builder)
     {
         builder.HasKey(m => m.Id);

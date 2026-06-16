@@ -16,6 +16,26 @@ When spawning sub-agents via the Agent tool, pick the model tier that matches th
 
 Default to **Sonnet** when in doubt. Escalate to **Opus** only when the task requires deep reasoning across many files. Use **Haiku** for pure read/search tasks where no judgment is needed.
 
+## Testing Requirements
+
+Every new command or query **must** ship with tests. Use the `unit-test` skill and `integration-test` skill to determine which applies:
+
+| What you're testing | Test type | Location |
+|---|---|---|
+| FluentValidation validator | Unit test (xUnit + Bogus + FluentValidation.TestHelper) | `WorldCuppy.Tests/Unit/<Feature>/` |
+| Pure calculation / mapping method | Unit test (xUnit + Bogus) | `WorldCuppy.Tests/Unit/<Feature>/` |
+| MediatR handler (DB queries) | Integration test (Testcontainers) | `WorldCuppy.Tests/Integration/<Feature>/` |
+
+**Unit test rules:**
+- Use **Bogus** for all generated test data — never hardcode magic literals unless the literal is the thing under test
+- Start from a valid `ValidCommand()` built with Bogus; mutate one property per test
+- Use `FluentValidation.TestHelper` (`ShouldHaveValidationErrorFor`, `ShouldNotHaveAnyValidationErrors`) for validator tests
+- Pure calculation logic that lives in a handler must be extracted to an `internal static` class so it is unit-testable without the DB
+
+**Key test infrastructure:**
+- Test project: `WorldCuppy.Tests/WorldCuppy.Tests.csproj`
+- `InternalsVisibleTo("WorldCuppy.Tests")` is set in `WorldCuppy/Properties/AssemblyInfo.cs` — `internal` helpers are automatically accessible
+
 ## Guardrails
 
 - **Never commit to `main` directly.** Always work on a feature branch (`git checkout -b feature/<name>`). For parallel tasks use git worktrees.

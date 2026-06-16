@@ -1,5 +1,6 @@
 namespace WorldCuppy.Features.Matches;
 
+/// <summary>Response payload for a single match fixture.</summary>
 public record MatchResponse(
     Guid Id,
     string HomeTeam,

@@ -11,6 +11,7 @@ public static class SyncEndpoints
     {
         var group = app.MapGroup("/api/v1/admin").WithTags("Admin");
 
+        // Returns Ok (not Created) because this is an admin action trigger, not a resource-creation endpoint.
         group.MapPost("/sync", async Task<Ok<SyncResult>> (ISender sender, CancellationToken ct) =>
         {
             var result = await sender.Send(new SyncCommand(), ct);

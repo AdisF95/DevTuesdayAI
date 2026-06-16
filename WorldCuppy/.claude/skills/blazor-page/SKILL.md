@@ -1,9 +1,11 @@
 ---
 name: blazor-page
-description: Scaffolds a MudBlazor Blazor page for the WorldCuppy project — routable @page component, correct rendermode, ISender injection, MudBlazor layout structure, and optional loading/empty states. Use this skill whenever the user asks to create a new page, add a route to the UI, build a screen or view, or scaffold the frontend for a feature. Trigger even if the user only describes the screen (e.g. "I need a predictions page", "show the leaderboard", "add a match schedule view").
+description: Scaffolds a MudBlazor Blazor page for the WorldCuppy project — routable @page component, correct rendermode, ISender injection, MudBlazor layout structure, and optional loading/empty states. Use this skill whenever the user asks to create a new page, add a route to the UI, build a screen or view, or scaffold the frontend for a feature. Trigger even if the user only describes the screen (e.g. "I need a predictions page", "show the leaderboard", "add a match schedule view"). For reusable non-routable components (cards, widgets, sections), use the blazor-component skill instead.
 ---
 
 # Create Blazor Page
+
+> **Reusable components vs pages:** This skill creates routable pages (`@page "/route"`). If you need a non-routable, parameter-driven component (like a card or a section widget), use the **blazor-component** skill instead.
 
 You are scaffolding a MudBlazor Blazor page for WorldCuppy (.NET 10, Blazor Server, MudBlazor 9).
 

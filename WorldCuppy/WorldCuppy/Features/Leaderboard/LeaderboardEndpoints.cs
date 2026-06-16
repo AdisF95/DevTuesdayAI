@@ -1,14 +1,17 @@
 using MediatR;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace WorldCuppy.Features.Leaderboard;
 
+/// <summary>Registers all Leaderboard API routes.</summary>
 public static class LeaderboardEndpoints
 {
+    /// <summary>Maps Leaderboard endpoints onto <paramref name="app" />.</summary>
     public static void MapEndpoints(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/leaderboard").WithTags("Leaderboard");
 
-        group.MapGet("/", async (ISender sender) =>
+        group.MapGet("/", async Task<Ok<List<LeaderboardEntryResponse>>> (ISender sender) =>
         {
             var leaderboard = await sender.Send(new GetLeaderboardQuery());
             return TypedResults.Ok(leaderboard);

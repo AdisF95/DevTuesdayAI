@@ -1,0 +1,120 @@
+@using WorldCuppy.Features.Matches
+
+<MudPaper Elevation="2" Class="@($"pa-4 {Class}")">
+
+    @* Teams + score/time row *@
+    <div class="d-flex align-center justify-space-between gap-2">
+
+        @* Home team *@
+        <div class="d-flex align-center gap-2 flex-1 justify-end">
+            <MudText Typo="Typo.subtitle1" Class="text-right" Style="font-weight:600">@Match.HomeTeam</MudText>
+            <MudAvatar Style="width:36px;height:36px;background:transparent">
+                @if (Match.HomeTeamCrest is not null)
+                {
+                    <img src="@Match.HomeTeamCrest" alt="@Match.HomeTeam" style="width:32px;height:32px;object-fit:contain" />
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.SportsSoccer" Size="Size.Small" />
+                }
+            </MudAvatar>
+        </div>
+
+        @* Centre: score or kickoff time *@
+        <div class="d-flex flex-column align-center mx-2" style="min-width:80px">
+            @if (Match.Status is "Finished" or "Live")
+            {
+                <MudText Typo="Typo.h5" Style="font-weight:700;letter-spacing:2px">
+                    @Match.HomeScore&nbsp;–&nbsp;@Match.AwayScore
+                </MudText>
+            }
+            else
+            {
+                @* KickoffUtc converted to Central European Time (CET/CEST) *@
+                <MudText Typo="Typo.subtitle1" Style="font-weight:600">
+                    @KickoffCet(Match.KickoffUtc)
+                </MudText>
+            }
+        </div>
+
+        @* Away team *@
+        <div class="d-flex align-center gap-2 flex-1">
+            <MudAvatar Style="width:36px;height:36px;background:transparent">
+                @if (Match.AwayTeamCrest is not null)
+                {
+                    <img src="@Match.AwayTeamCrest" alt="@Match.AwayTeam" style="width:32px;height:32px;object-fit:contain" />
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.SportsSoccer" Size="Size.Small" />
+                }
+            </MudAvatar>
+            <MudText Typo="Typo.subtitle1" Style="font-weight:600">@Match.AwayTeam</MudText>
+        </div>
+    </div>
+
+    @* Meta row: stage [· venue] · status *@
+    <div class="d-flex align-center justify-center gap-2 mt-2">
+        <MudText Typo="Typo.caption" Style="opacity:.7">@FormatStage(Match.Group, Match.Round)</MudText>
+        @if (HasVenue)
+        {
+            <MudText Typo="Typo.caption" Style="opacity:.4">·</MudText>
+            <MudText Typo="Typo.caption" Style="opacity:.7">@Match.Venue</MudText>
+        }
+        <MudText Typo="Typo.caption" Style="opacity:.4">·</MudText>
+        <MudChip T="string" Size="Size.Small" Color="@StatusColor(Match.Status)" Variant="Variant.Filled">
+            @Match.Status
+        </MudChip>
+    </div>
+
+</MudPaper>
+
+@code {
+    /// <summary>The match data to render.</summary>
+    [Parameter, EditorRequired] public required MatchResponse Match { get; set; }
+
+    /// <summary>Additional CSS classes forwarded to the outer MudPaper.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    // Europe/Berlin covers both CET (UTC+1, winter) and CEST (UTC+2, summer) automatically.
+    private static readonly TimeZoneInfo CetZone =
+        TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
+
+    private bool HasVenue => !string.IsNullOrEmpty(Match.Venue) && Match.Venue != "TBD";
+
+    /// <summary>Converts a UTC kickoff time to CET/CEST and formats it with the correct abbreviation.</summary>
+    private static string KickoffCet(DateTimeOffset kickoffUtc)
+    {
+        var local  = TimeZoneInfo.ConvertTimeFromUtc(kickoffUtc.UtcDateTime, CetZone);
+        var offset = CetZone.GetUtcOffset(kickoffUtc.UtcDateTime);
+        var label  = offset.Hours == 1 ? "CET" : "CEST";
+        return $"{local:HH:mm} {label}";
+    }
+
+    private static string FormatStage(string? group, string? round)
+    {
+        if (group is not null)
+        {
+            return "Group " + group.Replace("GROUP_", string.Empty);
+        }
+
+        return round switch
+        {
+            "RoundOf32"    => "Round of 32",
+            "RoundOf16"    => "Round of 16",
+            "QuarterFinal" => "Quarter Final",
+            "SemiFinal"    => "Semi Final",
+            "Final"        => "Final",
+            _              => string.Empty,
+        };
+    }
+
+    private static Color StatusColor(string status) => status switch
+    {
+        "Live"      => Color.Error,
+        "Finished"  => Color.Success,
+        "Postponed" => Color.Warning,
+        "Cancelled" => Color.Warning,
+        _           => Color.Default,
+    };
+}

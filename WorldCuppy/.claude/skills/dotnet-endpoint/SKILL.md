@@ -18,14 +18,17 @@ Confirm these before writing code — if the user hasn't provided them, ask (one
 
 ## Step 2: Pick the operation type
 
-| Operation | File name prefix | HTTP verb | Returns |
-|---|---|---|---|
-| Read (no side effects) | `Get<Name>` | GET | `List<T>` or `T?` |
-| Create | `Create<Name>` | POST | Created `T` |
-| Update | `Update<Name>` | PUT | Updated `T` or `NoContent` |
-| Delete | `Delete<Name>` | DELETE | `NoContent` |
+| Operation | File name prefix | HTTP verb | Returns | Validator? |
+|---|---|---|---|---|
+| Read (no side effects) | `Get<Name>` | GET | `List<T>` or `T?` | No |
+| Create | `Create<Name>` | POST | Created `T` | Yes |
+| Update | `Update<Name>` | PUT | Updated `T` or `NoContent` | Yes |
+| Delete | `Delete<Name>` | DELETE | `NoContent` | No |
+| Domain event (fan-out) | `<Name>Occurred` | — (no HTTP) | `Unit` | No |
 
 All files go under `WorldCuppy/Features/<FeatureName>/`.
+
+**Key decision:** If the operation has a request body (POST/PUT), it needs a validator. GET and DELETE by id do not.
 
 ## Step 3: Create the files
 
@@ -186,7 +189,31 @@ public static class <FeatureName>Endpoints
 
 Only include the route handlers that are actually needed — don't scaffold unused routes.
 
-## Step 4: Register in EndpointExtensions.cs
+## Step 4: Write unit tests
+
+For every new feature, create unit tests immediately — do not leave them for later.
+
+### If the feature has a validator (commands with a body)
+
+Create `WorldCuppy.Tests/Unit/<FeatureName>/<ValidatorName>Tests.cs` following the `unit-test` skill template:
+- One happy-path test: valid Bogus-generated command, `ShouldNotHaveAnyValidationErrors()`
+- One failure test per validation rule: mutate one property at a time, `ShouldHaveValidationErrorFor(x => x.Prop)`
+- Method names follow `UnitOfWork_StateUnderTest_ExpectedBehavior` — e.g. `CreatePredictionValidator_WhenUserIdIsEmpty_ShouldFailValidation`
+
+### If the handler contains pure in-memory logic (no DB calls)
+
+Extract the logic into an `internal static` class (e.g. `LeaderboardCalculator`) and write correctness + edge-case tests. `InternalsVisibleTo("WorldCuppy.Tests")` is already wired in `AssemblyInfo.cs`.
+
+### Queries and commands whose only logic is an EF Core query
+
+These are covered by integration tests (see `integration-test` skill). No unit tests needed for pure DB projection handlers.
+
+Run to confirm all new tests pass:
+```powershell
+dotnet test WorldCuppy.Tests/WorldCuppy.Tests.csproj --filter "FullyQualifiedName~Unit" --verbosity minimal
+```
+
+## Step 5: Register in EndpointExtensions.cs
 
 Open `WorldCuppy/Infrastructure/Extensions/EndpointExtensions.cs` and add:
 
@@ -201,6 +228,60 @@ using WorldCuppy.Features.<FeatureName>;   // add to usings at top
 
 Run `dotnet build WorldCuppy/WorldCuppy.csproj` and confirm 0 errors, 0 warnings before declaring done. Fix any issues before finishing.
 
+## Domain events (INotification / fan-out)
+
+Use `INotification` only when a state change must fan out to multiple independent handlers — for example, `MatchResultRecordedEvent` triggering both `AwardPointsHandler` and a leaderboard rebuild. Do **not** use notifications as a substitute for a command when there is only one consumer.
+
+File: `WorldCuppy/Features/<FeatureName>/<EventName>Event.cs`
+
+```csharp
+using MediatR;
+
+namespace WorldCuppy.Features.<FeatureName>;
+
+/// <summary>Published when <describe the state change that occurred>.</summary>
+public record <EventName>Event(
+    Guid <EntityId>,
+    // include only the data that consumers actually need
+    DateTimeOffset OccurredAtUtc
+) : INotification;
+```
+
+**Handler (one per consuming feature):**
+
+File: `WorldCuppy/Features/<ConsumerFeature>/<EventName>Handler.cs`
+
+```csharp
+using MediatR;
+using WorldCuppy.Features.<PublisherFeature>;
+
+namespace WorldCuppy.Features.<ConsumerFeature>;
+
+/// <summary>Handles <see cref="<EventName>Event" /> by <description of what this handler does>.</summary>
+public class <EventName>Handler(/* deps */)
+    : INotificationHandler<<EventName>Event>
+{
+    /// <summary>Reacts to the <EventName> event.</summary>
+    public async Task Handle(<EventName>Event notification, CancellationToken cancellationToken)
+    {
+        // do work
+        await Task.CompletedTask;
+    }
+}
+```
+
+**Publishing from a command handler:**
+
+```csharp
+// Inside the originating command handler, after the state change is persisted:
+await db.SaveChangesAsync(cancellationToken);
+await publisher.Publish(
+    new <EventName>Event(entity.Id, DateTimeOffset.UtcNow),
+    cancellationToken);
+```
+
+Inject `IPublisher` (not `ISender`) in the originating handler's primary constructor when publishing notifications.
+
 ## Style rules — apply to every file, no exceptions
 
 - File-scoped namespace (`namespace Foo;` not `namespace Foo { }`)
@@ -209,3 +290,4 @@ Run `dotnet build WorldCuppy/WorldCuppy.csproj` and confirm 0 errors, 0 warnings
 - POST returns `TypedResults.Created(location, body)`, not `TypedResults.Ok(...)`
 - No `.Include()` alongside `.Select()`
 - Validator only for operations that accept a body
+- `IPublisher` for notifications; `ISender` for commands/queries — never swap them

@@ -28,12 +28,16 @@ public static class HangfireExtensions
     /// <summary>
     /// Maps the Hangfire dashboard and registers all recurring jobs.
     /// Dashboard is only exposed in Development to avoid leaking job details in production.
+    /// Authorization is cleared in dev so Docker bridge traffic is not blocked.
     /// </summary>
     public static WebApplication UseHangfire(this WebApplication app)
     {
         if (app.Environment.IsDevelopment())
         {
-            app.MapHangfireDashboard("/hangfire");
+            app.MapHangfireDashboard("/hangfire", new DashboardOptions
+            {
+                Authorization = [],
+            });
         }
 
         // Sync every 15 minutes — fine-grained enough to catch results within a quarter-hour of full time.
@@ -41,6 +45,9 @@ public static class HangfireExtensions
             "sync-football-data",
             job => job.ExecuteAsync(),
             "*/15 * * * *");
+
+        // Enqueue an immediate sync on every startup so the DB is populated straight away.
+        BackgroundJob.Enqueue<SyncJob>(job => job.ExecuteAsync());
 
         return app;
     }

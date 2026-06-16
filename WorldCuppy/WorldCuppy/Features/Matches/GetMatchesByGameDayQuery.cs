@@ -4,11 +4,14 @@ using WorldCuppy.Infrastructure.Persistence;
 
 namespace WorldCuppy.Features.Matches;
 
+/// <summary>Query that retrieves all matches scheduled on a given date.</summary>
 public record GetMatchesByGameDayQuery(DateOnly GameDay) : IRequest<List<MatchResponse>>;
 
+/// <summary>Handles <see cref="GetMatchesByGameDayQuery" />.</summary>
 public class GetMatchesByGameDayHandler(WorldCuppyDbContext db)
     : IRequestHandler<GetMatchesByGameDayQuery, List<MatchResponse>>
 {
+    /// <summary>Executes the query against the database.</summary>
     public Task<List<MatchResponse>> Handle(GetMatchesByGameDayQuery request, CancellationToken cancellationToken) =>
         db.Matches
             .Where(m => m.GameDay == request.GameDay)

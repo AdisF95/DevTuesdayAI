@@ -129,7 +129,7 @@ public class SyncHandler(WorldCuppyDbContext db, FootballDataClient client)
         return upserted;
     }
 
-    private static MatchStatus MapStatus(string status) => status switch
+    internal static MatchStatus MapStatus(string status) => status switch
     {
         "IN_PLAY" or "PAUSED" or "SUSPENDED" => MatchStatus.Live,
         "FINISHED" or "AWARDED" => MatchStatus.Finished,
@@ -138,7 +138,7 @@ public class SyncHandler(WorldCuppyDbContext db, FootballDataClient client)
         _ => MatchStatus.Scheduled, // SCHEDULED, TIMED
     };
 
-    private static KnockoutRound? MapRound(string stage) => stage switch
+    internal static KnockoutRound? MapRound(string stage) => stage switch
     {
         "LAST_32" or "ROUND_OF_32" => KnockoutRound.RoundOf32,
         "LAST_16" or "ROUND_OF_16" => KnockoutRound.RoundOf16,

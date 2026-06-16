@@ -1,0 +1,33 @@
+@using WorldCuppy.Features.Matches
+
+<div class="mb-6">
+    <MudText Typo="Typo.h6" Class="mb-3">
+        @Label
+        <MudText Typo="Typo.caption" Inline="true" Class="ml-2" Style="opacity:.7">
+            @Date.ToString("dddd, d MMMM yyyy")
+        </MudText>
+    </MudText>
+
+    @if (Matches.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">No matches scheduled for this day.</MudAlert>
+    }
+    else
+    {
+        @foreach (var match in Matches)
+        {
+            <MatchCard Match="match" Class="mb-3" />
+        }
+    }
+</div>
+
+@code {
+    /// <summary>Section heading — "Today" or "Tomorrow".</summary>
+    [Parameter, EditorRequired] public required string Label { get; set; }
+
+    /// <summary>Calendar date this section represents.</summary>
+    [Parameter, EditorRequired] public required DateOnly Date { get; set; }
+
+    /// <summary>Matches to display.</summary>
+    [Parameter, EditorRequired] public required List<MatchResponse> Matches { get; set; }
+}

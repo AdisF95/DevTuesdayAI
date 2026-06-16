@@ -4,8 +4,10 @@ using WorldCuppy.Domain;
 
 namespace WorldCuppy.Infrastructure.Persistence.Configuration;
 
+/// <summary>EF Core mapping configuration for <see cref="Prediction" />.</summary>
 public class PredictionConfiguration : IEntityTypeConfiguration<Prediction>
 {
+    /// <summary>Configures table shape, constraints, and relationships for Prediction.</summary>
     public void Configure(EntityTypeBuilder<Prediction> builder)
     {
         builder.HasKey(p => p.Id);

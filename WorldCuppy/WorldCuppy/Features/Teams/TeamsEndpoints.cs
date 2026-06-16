@@ -11,7 +11,7 @@ public static class TeamsEndpoints
     {
         var group = app.MapGroup("/api/v1/teams").WithTags("Teams");
 
-        group.MapGet("/", async (ISender sender) =>
+        group.MapGet("/", async Task<Ok<List<TeamResponse>>> (ISender sender) =>
         {
             var result = await sender.Send(new GetTeamsQuery());
             return TypedResults.Ok(result);

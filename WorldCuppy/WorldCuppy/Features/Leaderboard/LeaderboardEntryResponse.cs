@@ -1,5 +1,6 @@
 namespace WorldCuppy.Features.Leaderboard;
 
+/// <summary>A single ranked team entry in the leaderboard.</summary>
 public record LeaderboardEntryResponse(
     int Rank,
     string Team,
