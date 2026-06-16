@@ -4,6 +4,18 @@
 @.claude/docs/architecture.md
 @.claude/docs/dev-setup.md
 
+## Model Routing
+
+When spawning sub-agents via the Agent tool, pick the model tier that matches the task complexity:
+
+| Model | ID | Use for |
+|---|---|---|
+| Haiku 4.5 | `claude-haiku-4-5` | File lookups, grep/search, single-file reads, boilerplate generation, simple checks |
+| Sonnet 4.6 | `claude-sonnet-4-6` | Regular feature work, debugging, code review, multi-file edits, endpoint scaffolding |
+| Opus 4.8 | `claude-opus-4-8` | Architecture decisions, complex cross-cutting debugging, security review, multi-agent orchestration |
+
+Default to **Sonnet** when in doubt. Escalate to **Opus** only when the task requires deep reasoning across many files. Use **Haiku** for pure read/search tasks where no judgment is needed.
+
 ## Guardrails
 
 - **Never commit to `main` directly.** Always work on a feature branch (`git checkout -b feature/<name>`). For parallel tasks use git worktrees.
