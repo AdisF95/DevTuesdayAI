@@ -3,6 +3,7 @@
 @.claude/docs/domain.md
 @.claude/docs/architecture.md
 @.claude/docs/dev-setup.md
+@.claude/docs/features.md
 
 ## Model Routing
 
