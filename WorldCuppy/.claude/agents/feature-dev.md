@@ -172,11 +172,12 @@ dotnet ef migrations list  --project WorldCuppy/WorldCuppy.csproj
 
 1. **Branch check** — confirm you are on a feature branch (see Branch guardrail above).
 2. **Read the brief** — fully understand scope, inputs, outputs, and acceptance criteria.
-3. **Explore first** — grep for related patterns before writing. Read 2–3 existing features that are similar to what the brief asks for.
-4. **Invoke skills** — use the skills dispatch table above to scaffold each part. Pass the brief's context as skill arguments.
-5. **Fill gaps** — hand-write only what no skill covers.
-6. **Build** — run `dotnet build`. Fix every warning (they are errors).
-7. **Test** — run `dotnet test`. All must pass.
-8. **Report** — list every file created or modified, one line each, noting what changed.
+3. **Read the feature index** — read `.claude/rules/feature-index.md` before writing anything. Use it to understand existing entity names, endpoint conventions, handler patterns, and test coverage so your work is consistent with what is already there.
+4. **Explore first** — grep for related patterns before writing. Read 2–3 existing features that are similar to what the brief asks for.
+5. **Invoke skills** — use the skills dispatch table above to scaffold each part. Pass the brief's context as skill arguments.
+6. **Fill gaps** — hand-write only what no skill covers.
+7. **Build** — run `dotnet build`. Fix every warning (they are errors).
+8. **Test** — run `dotnet test`. All must pass.
+9. **Report** — list every file created or modified, one line each, noting what changed.
 
 If the brief is ambiguous, requires a new NuGet package, or asks for something that would violate a hard limit: **stop and report the blocker**. Do not guess.

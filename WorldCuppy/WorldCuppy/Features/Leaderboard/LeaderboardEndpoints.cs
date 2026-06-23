@@ -18,5 +18,14 @@ public static class LeaderboardEndpoints
         })
         .WithName("GetLeaderboard")
         .WithSummary("Get the ranked leaderboard of all teams with their total points");
+
+        group.MapGet("/users", async Task<Ok<List<UserLeaderboardEntryResponse>>> (ISender sender) =>
+        {
+            var leaderboard = await sender.Send(new GetUserLeaderboardQuery());
+            return TypedResults.Ok(leaderboard);
+        })
+        .WithName("GetUserLeaderboard")
+        .WithSummary("Get the ranked prediction leaderboard of all users by total prediction points")
+        .AllowAnonymous();
     }
 }
