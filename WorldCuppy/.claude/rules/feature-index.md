@@ -11,7 +11,7 @@ Quick-reference for what exists in the codebase. Update this file whenever a fea
 | **Matches** | `GetMatchByIdQuery`, `GetMatchesByGameDayQuery`, `GetAllMatchesQuery`, `GetMatchDetailQuery` | `GET /api/v1/matches/{id}`, `GET /api/v1/matches?gameDay=` | `/matches` — scroll view grouped by day, auto-scrolls to today, matchday filter chips, click-to-detail dialog |
 | **Groups** | `GetGroupStandingsQuery` | — | `/groups` — group stage standings tables with form indicators |
 | **Teams** | `GetTeamsQuery`, `GetTeamByCodeQuery` | `GET /api/v1/teams`, `GET /api/v1/teams/{code}` | — |
-| **Leaderboard** | `GetLeaderboardQuery`, `LeaderboardCalculator` (internal static) | `GET /api/v1/leaderboard` | `/leaderboard` *(nav link exists, page not yet built)* |
+| **Leaderboard** | `GetLeaderboardQuery`, `LeaderboardCalculator` (internal static), `GetUserLeaderboardQuery`, `UserLeaderboardCalculator` (internal static) | `GET /api/v1/leaderboard`, `GET /api/v1/leaderboard/users` | `/leaderboard` *(nav link exists, page not yet built)* |
 | **Sync** | `SyncCommand`, `SyncJob` (Hangfire) | `POST /api/v1/sync` (manual trigger) | — |
 
 ## Domain Entities
@@ -43,6 +43,7 @@ Quick-reference for what exists in the codebase. Update this file whenever a fea
 | `/matches` | `Pages/Matches.razor` | Interactive Server | All matches grouped by day; matchday filter chips; auto-scrolls to today; click to open `MatchDetailDialog` |
 | `/groups` | `Pages/Groups.razor` | Interactive Server | Group stage standings tables (Pos/W/D/L/GD/Pts/Form) with crest + form colour chips |
 | `/predictions` | `Pages/Predictions.razor` | Interactive Server | Scheduled matches grouped by day; `AuthorizeView` gate; predict/update scores via `PredictionCard`; snackbar feedback |
+| `/leaderboard` | `Pages/Leaderboard.razor` | Interactive Server | Public ranked prediction leaderboard; `MudTable` with Rank/Player/Points/Exact/Correct/Predictions columns; highlights logged-in user's row via `AuthenticationStateProvider` |
 
 **Shared components:** `Matches/MatchCard.razor`, `Matches/MatchDaySection.razor`, `Matches/MatchDetailDialog.razor`, `Predictions/PredictionCard.razor`
 
@@ -71,3 +72,5 @@ Quick-reference for what exists in the codebase. Update this file whenever a fea
 | `GetUpcomingMatchesWithPredictionsQueryTests` | Integration | Scheduled match with/without prediction; Live/Finished excluded; kickoff ordering |
 | `UpdatePredictionCommandTests` | Integration | Happy path; wrong owner → not found; match not Scheduled → error; prediction not found |
 | `CreatePredictionCommandTests` | Integration | Match not Scheduled → InvalidOperationException |
+| `UserLeaderboardCalculatorTests` | Unit | CalculatePoints exact/correct/wrong scoring; Rank ordering, tie-break, aggregation, sequential ranks |
+| `GetUserLeaderboardQueryTests` | Integration | Ranked entries with correct points for finished match predictions; user with no predictions excluded |

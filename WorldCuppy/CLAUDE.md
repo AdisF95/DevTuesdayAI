@@ -21,6 +21,8 @@ WorldCuppy is a **2026 FIFA World Cup prediction game**. Users predict knockout 
 
 **Project layout:** `Components/` (Blazor pages + layout) · `Domain/` (plain entities) · `Features/` (vertical slices) · `Infrastructure/` (auth, persistence, extensions)
 
+**Living inventory:** `.claude/rules/feature-index.md` is the authoritative list of every feature, entity, endpoint, Blazor page, and test class. Read it at the start of any session to understand what exists. Update it whenever a feature, entity, or page is added or removed.
+
 ---
 
 ## Key Conventions

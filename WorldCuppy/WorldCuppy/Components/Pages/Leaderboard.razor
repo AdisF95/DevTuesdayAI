@@ -1,0 +1,77 @@
+@page "/leaderboard"
+@rendermode InteractiveServer
+@using System.Security.Claims
+@using MediatR
+@using WorldCuppy.Features.Leaderboard
+@inject ISender Sender
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Leaderboard — WorldCuppy 2026</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">Leaderboard</MudText>
+
+@if (_entries is null)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mb-4" />
+}
+else if (_entries.Count == 0)
+{
+    <MudText Typo="Typo.body1" Class="mt-4">No predictions have been submitted yet.</MudText>
+}
+else
+{
+    <MudTable Items="_entries"
+              Hover="true"
+              Striped="true"
+              Dense="true"
+              RowStyleFunc="RowStyle">
+        <HeaderContent>
+            <MudTh>Rank</MudTh>
+            <MudTh>Player</MudTh>
+            <MudTh>Points</MudTh>
+            <MudTh>Exact Scores</MudTh>
+            <MudTh>Correct Results</MudTh>
+            <MudTh>Predictions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Rank">@context.Rank</MudTd>
+            <MudTd DataLabel="Player">@context.Username</MudTd>
+            <MudTd DataLabel="Points">@context.TotalPoints</MudTd>
+            <MudTd DataLabel="Exact Scores">@context.ExactScores</MudTd>
+            <MudTd DataLabel="Correct Results">@context.CorrectResults</MudTd>
+            <MudTd DataLabel="Predictions">@context.PredictionsCount</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private List<UserLeaderboardEntryResponse>? _entries;
+    private string? _currentUsername;
+
+    /// <summary>Resolves the authenticated username (if any) and loads the leaderboard entries.</summary>
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            _currentUsername = user.FindFirst(ClaimTypes.Name)?.Value;
+        }
+
+        _entries = await Sender.Send(new GetUserLeaderboardQuery());
+    }
+
+    /// <summary>
+    /// Returns an inline style string that highlights the row when the entry belongs to the current user.
+    /// </summary>
+    private string RowStyle(UserLeaderboardEntryResponse entry, int _)
+    {
+        if (_currentUsername is not null && entry.Username == _currentUsername)
+        {
+            return "background-color: var(--mud-palette-primary); color: white;";
+        }
+
+        return string.Empty;
+    }
+}
