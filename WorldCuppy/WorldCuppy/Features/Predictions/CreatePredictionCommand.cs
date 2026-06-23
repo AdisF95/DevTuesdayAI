@@ -22,6 +22,11 @@ public class CreatePredictionHandler(WorldCuppyDbContext db)
         var match = await db.Matches.FindAsync([request.MatchId], cancellationToken)
             ?? throw new InvalidOperationException($"Match {request.MatchId} not found.");
 
+        if (match.Status != MatchStatus.Scheduled)
+        {
+            throw new InvalidOperationException("Match is not open for predictions.");
+        }
+
         var entity = new Prediction
         {
             Id = Guid.NewGuid(),

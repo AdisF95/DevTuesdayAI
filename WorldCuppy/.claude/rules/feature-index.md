@@ -7,7 +7,7 @@ Quick-reference for what exists in the codebase. Update this file whenever a fea
 | Feature | Handlers / Commands / Queries | API Endpoints | Blazor Page |
 |---|---|---|---|
 | **Users** | `RegisterUserCommand`, `LoginUserQuery`, `RegisterUserValidator` | `GET /account/complete-auth/{token}`, `GET /account/logout` | `/register`, `/login` |
-| **Predictions** | `CreatePredictionCommand`, `CreatePredictionValidator`, `GetPredictionsByUserQuery` | `POST /api/v1/predictions`, `GET /api/v1/predictions/user/{userId}` | `/predictions` *(nav link exists, page not yet built)* |
+| **Predictions** | `CreatePredictionCommand`, `CreatePredictionValidator`, `GetPredictionsByUserQuery`, `GetUpcomingMatchesWithPredictionsQuery`, `UpdatePredictionCommand`, `UpdatePredictionValidator` | `POST /api/v1/predictions`, `GET /api/v1/predictions/user/{userId}`, `GET /api/v1/predictions/upcoming/{userId}`, `PUT /api/v1/predictions/{id}` | `/predictions` — upcoming matches grouped by day; predict/update scores; snackbar feedback |
 | **Matches** | `GetMatchByIdQuery`, `GetMatchesByGameDayQuery`, `GetAllMatchesQuery`, `GetMatchDetailQuery` | `GET /api/v1/matches/{id}`, `GET /api/v1/matches?gameDay=` | `/matches` — scroll view grouped by day, auto-scrolls to today, matchday filter chips, click-to-detail dialog |
 | **Groups** | `GetGroupStandingsQuery` | — | `/groups` — group stage standings tables with form indicators |
 | **Teams** | `GetTeamsQuery`, `GetTeamByCodeQuery` | `GET /api/v1/teams`, `GET /api/v1/teams/{code}` | — |
@@ -42,8 +42,9 @@ Quick-reference for what exists in the codebase. Update this file whenever a fea
 | `/register` | `Pages/Register.razor` | Interactive Server | Register form → `RegisterUserCommand` → cookie via PendingAuthStore |
 | `/matches` | `Pages/Matches.razor` | Interactive Server | All matches grouped by day; matchday filter chips; auto-scrolls to today; click to open `MatchDetailDialog` |
 | `/groups` | `Pages/Groups.razor` | Interactive Server | Group stage standings tables (Pos/W/D/L/GD/Pts/Form) with crest + form colour chips |
+| `/predictions` | `Pages/Predictions.razor` | Interactive Server | Scheduled matches grouped by day; `AuthorizeView` gate; predict/update scores via `PredictionCard`; snackbar feedback |
 
-**Shared components:** `Matches/MatchCard.razor`, `Matches/MatchDaySection.razor`, `Matches/MatchDetailDialog.razor`
+**Shared components:** `Matches/MatchCard.razor`, `Matches/MatchDaySection.razor`, `Matches/MatchDetailDialog.razor`, `Predictions/PredictionCard.razor`
 
 ## Infrastructure
 
@@ -66,3 +67,7 @@ Quick-reference for what exists in the codebase. Update this file whenever a fea
 | `GetAllMatchesQueryTests` | Integration | Kickoff ordering, team projection, multi-day span |
 | `GetMatchDetailQueryTests` | Integration | Null for missing match; goals/bookings ordered by minute; extended scores (AET/penalties) |
 | `GetGroupStandingsQueryTests` | Integration | Ordering by group then position; team detail projection; form string |
+| `UpdatePredictionValidatorTests` | Unit | Score range 0–20; empty PredictionId; empty UserId |
+| `GetUpcomingMatchesWithPredictionsQueryTests` | Integration | Scheduled match with/without prediction; Live/Finished excluded; kickoff ordering |
+| `UpdatePredictionCommandTests` | Integration | Happy path; wrong owner → not found; match not Scheduled → error; prediction not found |
+| `CreatePredictionCommandTests` | Integration | Match not Scheduled → InvalidOperationException |

@@ -2,14 +2,14 @@ using FluentValidation;
 
 namespace WorldCuppy.Features.Predictions;
 
-/// <summary>Validates <see cref="CreatePredictionCommand" /> input.</summary>
-public class CreatePredictionValidator : AbstractValidator<CreatePredictionCommand>
+/// <summary>Validates <see cref="UpdatePredictionCommand" /> input.</summary>
+public class UpdatePredictionValidator : AbstractValidator<UpdatePredictionCommand>
 {
     /// <summary>Defines the validation rules.</summary>
-    public CreatePredictionValidator()
+    public UpdatePredictionValidator()
     {
+        RuleFor(x => x.PredictionId).NotEmpty();
         RuleFor(x => x.UserId).NotEmpty();
-        RuleFor(x => x.MatchId).NotEmpty();
         RuleFor(x => x.PredictedHomeScore).GreaterThanOrEqualTo(0).LessThanOrEqualTo(20);
         RuleFor(x => x.PredictedAwayScore).GreaterThanOrEqualTo(0).LessThanOrEqualTo(20);
     }

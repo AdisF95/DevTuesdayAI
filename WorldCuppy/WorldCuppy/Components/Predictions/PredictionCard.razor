@@ -1,0 +1,105 @@
+@using WorldCuppy.Features.Predictions
+
+<MudPaper Elevation="2" Class="pa-4 mb-3">
+
+    <div class="d-flex align-center justify-space-between gap-2">
+
+        @* Home team: crest + name + score controls *@
+        <div class="d-flex flex-column align-center flex-1 gap-2">
+            <div class="d-flex align-center gap-2 justify-center">
+                <MudAvatar Style="width:36px;height:36px;background:transparent">
+                    @if (Match.HomeTeamCrestUrl is not null)
+                    {
+                        <img src="@Match.HomeTeamCrestUrl" alt="@Match.HomeTeamName" style="width:32px;height:32px;object-fit:contain" />
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.SportsSoccer" Size="Size.Small" />
+                    }
+                </MudAvatar>
+                <MudText Typo="Typo.subtitle1" Style="font-weight:600">@Match.HomeTeamName</MudText>
+            </div>
+            <div class="d-flex align-center gap-1">
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" Size="Size.Large"
+                           Style="min-width:48px;font-size:1.4rem;font-weight:700;padding:0"
+                           OnClick="@(() => { if (_homeScore > 0) _homeScore--; })">−</MudButton>
+                <MudText Typo="Typo.h4" Style="min-width:48px;text-align:center;font-weight:700">@_homeScore</MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" Size="Size.Large"
+                           Style="min-width:48px;font-size:1.4rem;font-weight:700;padding:0"
+                           OnClick="@(() => { if (_homeScore < 20) _homeScore++; })">+</MudButton>
+            </div>
+        </div>
+
+        @* Centre: kickoff + predict button *@
+        <div class="d-flex flex-column align-center gap-3 mx-2" style="min-width:110px">
+            <MudText Typo="Typo.caption" Style="opacity:.8;text-align:center">
+                @Match.KickoffUtc.ToLocalTime().ToString("ddd d MMM HH:mm")
+            </MudText>
+            <MudText Typo="Typo.h5" Style="font-weight:700">–</MudText>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       OnClick="HandleSaveAsync"
+                       Disabled="IsSaving"
+                       Size="Size.Small">
+                @if (IsSaving)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-1" />
+                }
+                @(Match.PredictionId is not null ? "Update" : "Predict")
+            </MudButton>
+        </div>
+
+        @* Away team: crest + name + score controls *@
+        <div class="d-flex flex-column align-center flex-1 gap-2">
+            <div class="d-flex align-center gap-2 justify-center">
+                <MudAvatar Style="width:36px;height:36px;background:transparent">
+                    @if (Match.AwayTeamCrestUrl is not null)
+                    {
+                        <img src="@Match.AwayTeamCrestUrl" alt="@Match.AwayTeamName" style="width:32px;height:32px;object-fit:contain" />
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.SportsSoccer" Size="Size.Small" />
+                    }
+                </MudAvatar>
+                <MudText Typo="Typo.subtitle1" Style="font-weight:600">@Match.AwayTeamName</MudText>
+            </div>
+            <div class="d-flex align-center gap-1">
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" Size="Size.Large"
+                           Style="min-width:48px;font-size:1.4rem;font-weight:700;padding:0"
+                           OnClick="@(() => { if (_awayScore > 0) _awayScore--; })">−</MudButton>
+                <MudText Typo="Typo.h4" Style="min-width:48px;text-align:center;font-weight:700">@_awayScore</MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" Size="Size.Large"
+                           Style="min-width:48px;font-size:1.4rem;font-weight:700;padding:0"
+                           OnClick="@(() => { if (_awayScore < 20) _awayScore++; })">+</MudButton>
+            </div>
+        </div>
+
+    </div>
+
+</MudPaper>
+
+@code {
+    /// <summary>The scheduled match and its existing prediction (if any) to display.</summary>
+    [Parameter, EditorRequired] public required UpcomingMatchPredictionResponse Match { get; set; }
+
+    /// <summary>Raised when the user clicks Predict or Update. Carries the entered home and away scores.</summary>
+    [Parameter, EditorRequired] public required EventCallback<(int Home, int Away)> OnSave { get; set; }
+
+    /// <summary>When true, disables the button and shows a progress spinner while the save is in-flight.</summary>
+    [Parameter] public bool IsSaving { get; set; }
+
+    private int _homeScore;
+    private int _awayScore;
+
+    /// <summary>Pre-fills score inputs from the existing prediction each time the Match parameter changes.</summary>
+    protected override void OnParametersSet()
+    {
+        _homeScore = Match.PredictedHomeScore ?? 0;
+        _awayScore = Match.PredictedAwayScore ?? 0;
+    }
+
+    /// <summary>Invokes <see cref="OnSave" /> with the current home and away score inputs.</summary>
+    private async Task HandleSaveAsync() =>
+        await OnSave.InvokeAsync((_homeScore, _awayScore));
+}
