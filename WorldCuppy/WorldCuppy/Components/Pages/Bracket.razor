@@ -1,0 +1,55 @@
+@page "/bracket"
+@rendermode InteractiveServer
+@using MediatR
+@using WorldCuppy.Features.Bracket
+@using WorldCuppy.Components.Bracket
+@inject ISender Sender
+
+<PageTitle>Knockout Bracket — WorldCuppy 2026</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">Knockout Bracket</MudText>
+
+@if (_bracket is null)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mb-4" />
+}
+else if (_bracket.Rounds.Count == 0)
+{
+    <MudAlert Severity="Severity.Info">No knockout matches available yet.</MudAlert>
+}
+else
+{
+    @foreach (var round in _bracket.Rounds)
+    {
+        <MudText Typo="Typo.h6" Class="mt-4 mb-2">@FormatRound(round.Round)</MudText>
+
+        @foreach (var match in round.Matches)
+        {
+            <BracketMatchCard Match="match" Class="mb-3" />
+        }
+    }
+}
+
+@code {
+    private BracketResponse? _bracket;
+
+    /// <summary>Fetches the full knockout bracket grouped by round on page load.</summary>
+    protected override async Task OnInitializedAsync()
+    {
+        _bracket = await Sender.Send(new GetBracketQuery());
+    }
+
+    /// <summary>
+    /// Maps a round identifier string to a human-readable label.
+    /// Returns the raw string for any unrecognised value.
+    /// </summary>
+    private static string FormatRound(string round) => round switch
+    {
+        "RoundOf32"    => "Round of 32",
+        "RoundOf16"    => "Round of 16",
+        "QuarterFinal" => "Quarter-Final",
+        "SemiFinal"    => "Semi-Final",
+        "Final"        => "Final",
+        _              => round,
+    };
+}
