@@ -9,9 +9,7 @@ Pressing **Start** launches the full stack via Docker Compose (`docker-compose.d
 | App (Blazor + API) | Linux container, debugger attached |
 | PostgreSQL | `postgres:17`, persisted via named volume |
 
-**Prerequisite:** Docker Desktop running.
-
-Migrations are applied automatically on startup (`MigrateAsync()` in `Program.cs`).
+**Prerequisite:** Docker Desktop running. Migrations are applied automatically on startup (`MigrateAsync()` in `Program.cs`).
 
 **Connection strings:**
 
@@ -48,15 +46,12 @@ dotnet test
 dotnet test --collect:"XPlat Code Coverage"
 ```
 
-Test projects mirror the vertical slice structure. Integration tests use Testcontainers (real PostgreSQL).
-
 ## OpenAPI / Scalar
 
 - OpenAPI document: `http://localhost:5048/openapi/v1.json`
 - Scalar UI: `http://localhost:5048/scalar/v1`
 
-Dev/staging only — never expose `/openapi` or `/scalar` in production.
-Do not add Swashbuckle; use `Microsoft.AspNetCore.OpenApi` + `Scalar.AspNetCore`.
+Dev/staging only — never expose `/openapi` or `/scalar` in production. Do not add Swashbuckle; use `Microsoft.AspNetCore.OpenApi` + `Scalar.AspNetCore`.
 
 ## DBeaver
 

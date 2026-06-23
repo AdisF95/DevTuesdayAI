@@ -110,7 +110,11 @@ else
 }
 ```
 
-## Step 4: Register in nav (if it's a top-level page)
+## Step 4: Update the Feature Index
+
+Open `.claude/rules/feature-index.md` and add a row to the **Blazor Pages & Components** table (path, file, render mode, description).
+
+## Step 5: Register in nav (if it's a top-level page)
 
 Open `Components/Layout/MainLayout.razor` and add a `MudNavLink` in the `MudNavMenu`:
 
@@ -120,7 +124,7 @@ Open `Components/Layout/MainLayout.razor` and add a `MudNavLink` in the `MudNavM
 
 Pick an icon from `Icons.Material.Filled` that fits the page concept.
 
-## Step 5: Verify
+## Step 6: Verify
 
 Run `dotnet build WorldCuppy/WorldCuppy.csproj` and confirm 0 errors, 0 warnings before declaring done.
 

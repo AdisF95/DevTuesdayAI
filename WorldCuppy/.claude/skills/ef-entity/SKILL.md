@@ -142,7 +142,11 @@ The migration is applied automatically on the next app startup via `MigrateAsync
 dotnet ef database update --project WorldCuppy/WorldCuppy.csproj
 ```
 
-## Step 6: Verify the build
+## Step 6: Update the Feature Index
+
+Open `.claude/rules/feature-index.md` and add a row to the **Domain Entities** table for the new entity (key columns, constraints, notes).
+
+## Step 7: Verify the build
 
 ```powershell
 dotnet build WorldCuppy/WorldCuppy.csproj

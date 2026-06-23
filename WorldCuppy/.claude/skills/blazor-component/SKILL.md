@@ -110,7 +110,11 @@ If the `<FeatureArea>` subfolder does not exist yet, create it.
 }
 ```
 
-## Step 4: Verify usage in the parent page
+## Step 4: Update the Feature Index
+
+Open `.claude/rules/feature-index.md` and add the component name to the **Shared components** line under Blazor Pages & Components.
+
+## Step 5: Verify usage in the parent page
 
 Show a usage snippet so the caller knows how to consume the component:
 
@@ -122,7 +126,7 @@ Show a usage snippet so the caller knows how to consume the component:
 <<ComponentName> <EntityName>="@_item" OnAction="HandleAction" />
 ```
 
-## Step 5: Verify
+## Step 6: Verify
 
 Run `dotnet build WorldCuppy/WorldCuppy.csproj` and confirm 0 errors, 0 warnings.
 
