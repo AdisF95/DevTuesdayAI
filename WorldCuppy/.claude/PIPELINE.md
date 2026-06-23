@@ -12,11 +12,11 @@ Quick reference for how the Claude agents, skills, and rules fit together. Read 
       for X"     ──────▶│ brief-writer│  shows draft for approval,
                         │  (Opus 4.8) │  writes .claude/briefs/<name>.md
                         └──────┬──────┘
-                               │ "Brief written. Trigger backend-dev
-                               │  and frontend-dev in parallel."
+                               │ user confirms → automatically spawns
+                               │ both agents in parallel worktrees
                                │
                ┌───────────────┴────────────────┐
-               │  (run in parallel)             │
+               │  (parallel, isolated worktrees) │
                ▼                                ▼
     ┌─────────────────────┐         ┌─────────────────────┐
     │     backend-dev     │         │    frontend-dev      │
@@ -97,27 +97,24 @@ Quick reference for how the Claude agents, skills, and rules fit together. Read 
 
 ## Parallel execution & worktrees
 
-`backend-dev` and `frontend-dev` can run simultaneously because their scopes do not overlap:
+`backend-dev` and `frontend-dev` run automatically in parallel after you confirm the brief. `brief-writer` spawns both agents simultaneously using the Agent tool's built-in `isolation: "worktree"` — each agent gets its own isolated git worktree and cannot conflict with the other.
 
-- `backend-dev` owns: `Features/`, `Domain/`, `Infrastructure/`, `WorldCuppy.Tests/`
-- `frontend-dev` owns: `Components/` (pages + shared components)
+When both finish you will receive:
+- A summary of what each agent built
+- Two branch names — one per worktree
 
-**To run them in parallel without file conflicts, use git worktrees:**
+**Merge them before opening a PR:**
 
 ```powershell
-# From the repo root — create two worktrees on the same branch
-git worktree add ../WorldCuppy-backend feature/<name>
-git worktree add ../WorldCuppy-frontend feature/<name>
-
-# Trigger backend-dev in one terminal (pointed at ../WorldCuppy-backend)
-# Trigger frontend-dev in another terminal (pointed at ../WorldCuppy-frontend)
-
-# After both finish, remove the worktrees
-git worktree remove ../WorldCuppy-backend
-git worktree remove ../WorldCuppy-frontend
+git checkout <backend-branch>
+git merge <frontend-branch>
+# resolve any conflicts (unlikely given non-overlapping scopes)
+# then open your PR from <backend-branch>
 ```
 
-Both agents commit to the same branch; changes are merged when the worktrees are removed.
+**Scope boundaries (why conflicts are rare):**
+- `backend-dev` owns: `Features/`, `Domain/`, `Infrastructure/`, `WorldCuppy.Tests/`
+- `frontend-dev` owns: `Components/` (pages + shared components)
 
 ---
 

@@ -127,13 +127,28 @@ Before showing the draft to the user, check it against this list:
 
 ## After writing the brief
 
-Once the file is written, tell the user:
+Once the file is written, immediately spawn `backend-dev` and `frontend-dev` in parallel using the Agent tool — do not wait for user input at this stage. Pass `isolation: "worktree"` to both so they each get their own git worktree and cannot conflict with each other.
 
-> "Brief written to `.claude/briefs/<name>.md`. You can now trigger **backend-dev** and **frontend-dev** in parallel:
-> - `implement the backend for .claude/briefs/<name>.md`
-> - `implement the frontend for .claude/briefs/<name>.md`
+**Spawn both in a single message with two Agent tool calls:**
+
+- Agent 1: `subagent_type: "backend-dev"`, `isolation: "worktree"`, prompt: `"Implement the backend for .claude/briefs/<name>.md"`
+- Agent 2: `subagent_type: "frontend-dev"`, `isolation: "worktree"`, prompt: `"Implement the frontend for .claude/briefs/<name>.md"`
+
+**After both agents complete**, report to the user:
+- Which files each agent created or changed
+- The branch name for each worktree (returned in the agent result)
+- What to do next:
+
+> "Both agents are done. Your changes are on two branches:
+> - Backend: `<branch-name-1>`
+> - Frontend: `<branch-name-2>`
 >
-> Both agents read the brief's API contract independently, so they can run at the same time."
+> To combine them, checkout the backend branch and merge the frontend branch into it:
+> ```
+> git checkout <branch-name-1>
+> git merge <branch-name-2>
+> ```
+> Then open a PR from `<branch-name-1>`."
 
 ---
 
