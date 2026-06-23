@@ -1,0 +1,113 @@
+@page "/predictions"
+@rendermode InteractiveServer
+@using System.Security.Claims
+@using MediatR
+@using WorldCuppy.Features.Predictions
+@using WorldCuppy.Components.Predictions
+@inject ISender Sender
+@inject ISnackbar Snackbar
+
+<AuthorizeView>
+    <Authorized>
+        <PageTitle>My Predictions — WorldCuppy 2026</PageTitle>
+
+        <MudText Typo="Typo.h5" GutterBottom="true">My Predictions</MudText>
+
+        @if (_matches is null)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mb-4" />
+        }
+        else if (_matches.Count == 0)
+        {
+            <MudText Typo="Typo.body1" Class="mt-4">No upcoming matches to predict.</MudText>
+        }
+        else
+        {
+            @foreach (var group in _matches.GroupBy(m => m.GameDay).OrderBy(g => g.Key))
+            {
+                var groupDate = group.First().KickoffUtc.ToLocalTime();
+                <MudText Typo="Typo.h6" Class="mt-4 mb-2">
+                    @groupDate.ToString("dddd, d MMMM yyyy")
+                </MudText>
+
+                @foreach (var m in group.OrderBy(x => x.KickoffUtc))
+                {
+                    var match = m;
+                    <PredictionCard Match="match"
+                                    OnSave="@(args => SaveAsync(match, args.Home, args.Away))"
+                                    IsSaving="@(_savingMatchId == match.MatchId)" />
+                }
+            }
+        }
+    </Authorized>
+    <NotAuthorized>
+        <div class="d-flex flex-column align-center mt-8 gap-3">
+            <MudText Typo="Typo.h6">You need to be logged in to view your predictions.</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/login">
+                Log in
+            </MudButton>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthState { get; set; } = default!; // safe: Blazor always provides CascadingAuthenticationState
+
+    private List<UpcomingMatchPredictionResponse>? _matches;
+    private Guid _userId;
+    private Guid? _savingMatchId;
+
+    /// <summary>Resolves the authenticated user's id and loads the initial match list.</summary>
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthState;
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
+        // IsAuthenticated guarantees NameIdentifier is present — ! is safe here.
+        _userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+        await LoadMatchesAsync();
+    }
+
+    /// <summary>Fetches all scheduled matches with the current user's predictions.</summary>
+    private async Task LoadMatchesAsync()
+    {
+        _matches = await Sender.Send(new GetUpcomingMatchesWithPredictionsQuery(_userId));
+    }
+
+    /// <summary>
+    /// Creates or updates the prediction for <paramref name="match" />, then refreshes the list.
+    /// </summary>
+    private async Task SaveAsync(UpcomingMatchPredictionResponse match, int homeScore, int awayScore)
+    {
+        _savingMatchId = match.MatchId;
+        try
+        {
+            if (match.PredictionId is null)
+            {
+                await Sender.Send(new CreatePredictionCommand(_userId, match.MatchId, homeScore, awayScore));
+            }
+            else
+            {
+                await Sender.Send(new UpdatePredictionCommand(match.PredictionId.Value, _userId, homeScore, awayScore));
+            }
+
+            Snackbar.Add("Prediction saved ✓", Severity.Success);
+            await LoadMatchesAsync();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Something went wrong, please try again", Severity.Error);
+        }
+        finally
+        {
+            _savingMatchId = null;
+        }
+    }
+}

@@ -1,9 +1,6 @@
 ---
 name: feature-dev
-description: |
-  WorldCuppy feature development agent. Reads a local briefing file and implements a complete
-  vertical-slice feature using project skills, following conventions strictly.
-  Trigger with: "implement the feature described in .claude/briefs/<name>.md"
+description: WorldCuppy feature development agent. Reads a local briefing file and implements a complete vertical-slice feature using project skills, following conventions strictly. Trigger with "implement the feature described in .claude/briefs/<name>.md"
 tools: Read, Write, Edit, Glob, Grep, Bash, Skill
 model: claude-sonnet-4-6
 ---
