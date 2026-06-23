@@ -13,7 +13,7 @@ public record SyncCommand : IRequest<SyncResult>;
 public record SyncResult(int TeamsUpserted, int MatchesUpserted, int StandingsUpserted, int GoalEventsAdded, int BookingEventsAdded);
 
 /// <summary>Handles <see cref="SyncCommand" />.</summary>
-public partial class SyncHandler(WorldCuppyDbContext db, FootballDataClient client, ILogger<SyncHandler> logger)
+public partial class SyncHandler(WorldCuppyDbContext db, FootballDataClient client, ILogger<SyncHandler> logger, IPublisher publisher)
     : IRequestHandler<SyncCommand, SyncResult>
 {
     /// <summary>Fetches teams, matches, standings, and match events from the API and upserts them into the database.</summary>
@@ -102,6 +102,7 @@ public partial class SyncHandler(WorldCuppyDbContext db, FootballDataClient clie
             .ToDictionaryAsync(m => m.ExternalId, ct);
 
         var upserted = 0;
+        var pendingEvents = new List<MatchFinishedEvent>();
 
         foreach (var fd in fdMatches)
         {
@@ -123,6 +124,13 @@ public partial class SyncHandler(WorldCuppyDbContext db, FootballDataClient clie
 
             if (existingMatches.TryGetValue(fd.Id, out var match))
             {
+                // Detect transition: previous status was not Finished; incoming status is Finished.
+                // Must check before the continue guard below so the transition is captured.
+                bool justFinished = match.Status != MatchStatus.Finished
+                                 && status == MatchStatus.Finished
+                                 && fd.Score.FullTime.Home.HasValue
+                                 && fd.Score.FullTime.Away.HasValue;
+
                 // Finished matches have authoritative scores — no need to re-apply API data.
                 if (match.Status == MatchStatus.Finished)
                 {
@@ -144,6 +152,14 @@ public partial class SyncHandler(WorldCuppyDbContext db, FootballDataClient clie
                 if (fd.Venue is not null)
                 {
                     match.Venue = fd.Venue;
+                }
+
+                if (justFinished)
+                {
+                    pendingEvents.Add(new MatchFinishedEvent(
+                        match.Id,
+                        fd.Score.FullTime.Home!.Value,
+                        fd.Score.FullTime.Away!.Value));
                 }
             }
             else
@@ -177,7 +193,14 @@ public partial class SyncHandler(WorldCuppyDbContext db, FootballDataClient clie
             upserted++;
         }
 
+        // Persist all match updates before publishing events — handlers need committed scores.
         await db.SaveChangesAsync(ct);
+
+        foreach (var evt in pendingEvents)
+        {
+            await publisher.Publish(evt, ct);
+        }
+
         return upserted;
     }
 

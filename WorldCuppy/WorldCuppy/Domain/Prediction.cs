@@ -23,4 +23,10 @@ public class Prediction
 
     /// <summary>UTC timestamp of when the prediction was submitted.</summary>
     public DateTimeOffset SubmittedAtUtc { get; set; }
+
+    /// <summary>Points awarded for this prediction. Null until the match finishes.</summary>
+    public int? Points { get; set; }
+
+    /// <summary>UTC timestamp of when points were awarded. Null until the match finishes.</summary>
+    public DateTimeOffset? PointsAwardedAtUtc { get; set; }
 }

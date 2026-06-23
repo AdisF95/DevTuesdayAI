@@ -15,6 +15,8 @@ public class PredictionConfiguration : IEntityTypeConfiguration<Prediction>
         builder.Property(p => p.PredictedHomeScore).IsRequired();
         builder.Property(p => p.PredictedAwayScore).IsRequired();
         builder.Property(p => p.SubmittedAtUtc).IsRequired();
+        builder.Property(p => p.Points);
+        builder.Property(p => p.PointsAwardedAtUtc);
         builder.HasOne(p => p.Match)
             .WithMany()
             .HasForeignKey(p => p.MatchId)
