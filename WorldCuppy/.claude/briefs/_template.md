@@ -31,6 +31,14 @@
 - [ ] Handler integration test covers happy path + edge cases
 - [ ] Blazor page renders without errors
 
+## Test requirements
+
+| Test class | Type | What it covers |
+|---|---|---|
+| `XxxValidatorTests` | Unit | ... |
+| `XxxCommandTests` | Integration | Happy path; error cases |
+| `XxxQueryTests` | Integration | ... |
+
 ## Out of Scope
 <!-- Anything explicitly excluded to avoid scope creep -->
 - No real-time updates

@@ -11,8 +11,8 @@ Quick-reference for what exists in the codebase. Update this file whenever a fea
 | **Matches** | `GetMatchByIdQuery`, `GetMatchesByGameDayQuery`, `GetAllMatchesQuery`, `GetMatchDetailQuery` | `GET /api/v1/matches/{id}`, `GET /api/v1/matches?gameDay=` | `/matches` — scroll view grouped by day, auto-scrolls to today, matchday filter chips, click-to-detail dialog |
 | **Groups** | `GetGroupStandingsQuery` | — | `/groups` — group stage standings tables with form indicators |
 | **Teams** | `GetTeamsQuery`, `GetTeamByCodeQuery` | `GET /api/v1/teams`, `GET /api/v1/teams/{code}` | — |
-| **Leaderboard** | `GetUserLeaderboardQuery`, `UserLeaderboardCalculator` (internal static) | `GET /api/v1/leaderboard/users` | `/leaderboard` *(nav link exists, page not yet built)* |
-| **Sync** | `SyncCommand`, `SyncJob` (Hangfire), `MatchFinishedEvent` (INotification) | `POST /api/v1/sync` (manual trigger) | — |
+| **Leaderboard** | `GetUserLeaderboardQuery`, `UserLeaderboardCalculator` (internal static) | `GET /api/v1/leaderboard/users` | `/leaderboard` — public ranked leaderboard; highlights logged-in user's row |
+| **Sync** | `SyncCommand`, `SyncJob` (Hangfire), `MatchFinishedEvent` (INotification → consumed by `AwardPredictionPointsHandler` in Predictions) | `POST /api/v1/sync` (manual trigger) | — |
 
 ## Domain Entities
 
