@@ -1,3 +1,4 @@
+using WorldCuppy.Features.Bracket;
 using WorldCuppy.Features.Leaderboard;
 using WorldCuppy.Features.Matches;
 using WorldCuppy.Features.Predictions;
@@ -13,6 +14,7 @@ public static class EndpointExtensions
     /// <summary>Registers all feature endpoints onto <paramref name="app" />.</summary>
     public static IEndpointRouteBuilder MapAllEndpoints(this IEndpointRouteBuilder app)
     {
+        BracketEndpoints.MapEndpoints(app);
         MatchesEndpoints.MapEndpoints(app);
         LeaderboardEndpoints.MapEndpoints(app);
         PredictionsEndpoints.MapEndpoints(app);

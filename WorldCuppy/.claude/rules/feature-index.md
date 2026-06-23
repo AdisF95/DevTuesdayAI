@@ -13,6 +13,7 @@ Quick-reference for what exists in the codebase. Update this file whenever a fea
 | **Teams** | `GetTeamsQuery`, `GetTeamByCodeQuery` | `GET /api/v1/teams`, `GET /api/v1/teams/{code}` | — |
 | **Leaderboard** | `GetUserLeaderboardQuery`, `UserLeaderboardCalculator` (internal static) | `GET /api/v1/leaderboard/users` | `/leaderboard` — public ranked leaderboard; highlights logged-in user's row |
 | **Sync** | `SyncCommand`, `SyncJob` (Hangfire), `MatchFinishedEvent` (INotification → consumed by `AwardPredictionPointsHandler` in Predictions) | `POST /api/v1/sync` (manual trigger) | — |
+| **Bracket** | `GetBracketQuery`, `ScoreFormatter` (internal static) | `GET /api/v1/bracket` | `/bracket` — public knockout phase bracket grouped by round; flag + name + score per slot; TBD for unresolved teams; AET/pens annotation |
 
 ## Domain Entities
 
@@ -44,8 +45,9 @@ Quick-reference for what exists in the codebase. Update this file whenever a fea
 | `/groups` | `Pages/Groups.razor` | Interactive Server | Group stage standings tables (Pos/W/D/L/GD/Pts/Form) with crest + form colour chips |
 | `/predictions` | `Pages/Predictions.razor` | Interactive Server | Scheduled matches grouped by day; `AuthorizeView` gate; predict/update scores via `PredictionCard`; snackbar feedback |
 | `/leaderboard` | `Pages/Leaderboard.razor` | Interactive Server | Public ranked prediction leaderboard; `MudTable` with Rank/Player/Points/Exact/Correct/Predictions columns; highlights logged-in user's row via `AuthenticationStateProvider` |
+| `/bracket` | `Pages/Bracket.razor` | Interactive Server | Knockout bracket grouped by round; each match rendered via `BracketMatchCard`; score (with AET/pens annotation) or kickoff time in centre; TBD placeholder for unresolved slots |
 
-**Shared components:** `Matches/MatchCard.razor`, `Matches/MatchDaySection.razor`, `Matches/MatchDetailDialog.razor`, `Predictions/PredictionCard.razor`
+**Shared components:** `Matches/MatchCard.razor`, `Matches/MatchDaySection.razor`, `Matches/MatchDetailDialog.razor`, `Predictions/PredictionCard.razor`, `Bracket/BracketMatchCard.razor`
 
 ## Infrastructure
 
@@ -75,3 +77,5 @@ Quick-reference for what exists in the codebase. Update this file whenever a fea
 | `PredictionPointsCalculatorTests` | Unit | Exact (3 pts); correct result home win, away win, draw (1 pt each); wrong result (0 pts) |
 | `AwardPredictionPointsHandlerTests` | Integration | Happy path multiple predictions; idempotency (second publish no-op); match with no predictions; group-stage match |
 | `GetUserLeaderboardQueryTests` | Integration | Ranked entries with persisted points; user with no predictions appears with 0 points; unawarded predictions excluded from totals |
+| `ScoreFormatterTests` | Unit | Not-Finished → null; REGULAR → plain score; EXTRA_TIME → "(aet)" annotation; PENALTY_SHOOTOUT → "(X–Y pens)" annotation; en-dash separator verified |
+| `GetBracketQueryTests` | Integration | Group-stage excluded; round grouping; fixed round order; kickoff ordering within round; Finished/Scheduled/AET/pens score formatting end-to-end; empty bracket |

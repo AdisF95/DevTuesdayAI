@@ -1,0 +1,92 @@
+@using WorldCuppy.Features.Bracket
+
+<MudPaper Elevation="2" Class="@($"pa-4 {Class}")">
+
+    @* Teams + score/time row *@
+    <div class="d-flex align-center justify-space-between gap-2">
+
+        @* Home team *@
+        <div class="d-flex align-center gap-2 flex-1 justify-end">
+            <MudText Typo="Typo.subtitle1" Class="text-right" Style="font-weight:600">@Match.HomeTeam.Name</MudText>
+            <MudAvatar Style="width:36px;height:36px;background:transparent">
+                @if (Match.HomeTeam.CrestUrl is not null)
+                {
+                    <img src="@Match.HomeTeam.CrestUrl" alt="@Match.HomeTeam.Name" style="width:32px;height:32px;object-fit:contain" />
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.SportsSoccer" Size="Size.Small" />
+                }
+            </MudAvatar>
+        </div>
+
+        @* Centre: score or kickoff time *@
+        <div class="d-flex flex-column align-center mx-2" style="min-width:90px">
+            @if (Match.Score is not null)
+            {
+                <MudText Typo="Typo.h5" Style="font-weight:700;letter-spacing:2px">
+                    @Match.Score
+                </MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.subtitle1" Style="font-weight:600">
+                    @KickoffCet(Match.KickoffUtc)
+                </MudText>
+            }
+        </div>
+
+        @* Away team *@
+        <div class="d-flex align-center gap-2 flex-1">
+            <MudAvatar Style="width:36px;height:36px;background:transparent">
+                @if (Match.AwayTeam.CrestUrl is not null)
+                {
+                    <img src="@Match.AwayTeam.CrestUrl" alt="@Match.AwayTeam.Name" style="width:32px;height:32px;object-fit:contain" />
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.SportsSoccer" Size="Size.Small" />
+                }
+            </MudAvatar>
+            <MudText Typo="Typo.subtitle1" Style="font-weight:600">@Match.AwayTeam.Name</MudText>
+        </div>
+
+    </div>
+
+    @* Status chip *@
+    <div class="d-flex justify-center mt-2">
+        <MudChip T="string" Size="Size.Small" Color="@StatusColor(Match.Status)" Variant="Variant.Filled">
+            @Match.Status
+        </MudChip>
+    </div>
+
+</MudPaper>
+
+@code {
+    /// <summary>The knockout bracket match data to render.</summary>
+    [Parameter, EditorRequired] public required BracketMatchDto Match { get; set; }
+
+    /// <summary>Additional CSS classes forwarded to the outer MudPaper.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    // Europe/Berlin covers both CET (UTC+1, winter) and CEST (UTC+2, summer) automatically.
+    private static readonly TimeZoneInfo CetZone =
+        TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
+
+    /// <summary>Converts a UTC kickoff time to CET/CEST and formats it with the correct abbreviation.</summary>
+    private static string KickoffCet(DateTimeOffset kickoffUtc)
+    {
+        var local = TimeZoneInfo.ConvertTimeFromUtc(kickoffUtc.UtcDateTime, CetZone);
+        var offset = CetZone.GetUtcOffset(kickoffUtc.UtcDateTime);
+        var label = offset.Hours == 1 ? "CET" : "CEST";
+        return $"{local:HH:mm} {label}";
+    }
+
+    /// <summary>Returns a <see cref="Color" /> appropriate for the given match status string.</summary>
+    private static Color StatusColor(string status) => status switch
+    {
+        "Live"     => Color.Primary,
+        "Finished" => Color.Success,
+        _          => Color.Default,
+    };
+}
