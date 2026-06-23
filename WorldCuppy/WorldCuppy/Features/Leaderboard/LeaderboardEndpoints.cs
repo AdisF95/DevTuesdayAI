@@ -11,14 +11,6 @@ public static class LeaderboardEndpoints
     {
         var group = app.MapGroup("/api/v1/leaderboard").WithTags("Leaderboard");
 
-        group.MapGet("/", async Task<Ok<List<LeaderboardEntryResponse>>> (ISender sender) =>
-        {
-            var leaderboard = await sender.Send(new GetLeaderboardQuery());
-            return TypedResults.Ok(leaderboard);
-        })
-        .WithName("GetLeaderboard")
-        .WithSummary("Get the ranked leaderboard of all teams with their total points");
-
         group.MapGet("/users", async Task<Ok<List<UserLeaderboardEntryResponse>>> (ISender sender) =>
         {
             var leaderboard = await sender.Send(new GetUserLeaderboardQuery());

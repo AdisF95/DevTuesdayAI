@@ -11,7 +11,7 @@ Quick-reference for what exists in the codebase. Update this file whenever a fea
 | **Matches** | `GetMatchByIdQuery`, `GetMatchesByGameDayQuery`, `GetAllMatchesQuery`, `GetMatchDetailQuery` | `GET /api/v1/matches/{id}`, `GET /api/v1/matches?gameDay=` | `/matches` — scroll view grouped by day, auto-scrolls to today, matchday filter chips, click-to-detail dialog |
 | **Groups** | `GetGroupStandingsQuery` | — | `/groups` — group stage standings tables with form indicators |
 | **Teams** | `GetTeamsQuery`, `GetTeamByCodeQuery` | `GET /api/v1/teams`, `GET /api/v1/teams/{code}` | — |
-| **Leaderboard** | `GetLeaderboardQuery`, `LeaderboardCalculator` (internal static), `GetUserLeaderboardQuery`, `UserLeaderboardCalculator` (internal static) | `GET /api/v1/leaderboard`, `GET /api/v1/leaderboard/users` | `/leaderboard` *(nav link exists, page not yet built)* |
+| **Leaderboard** | `GetUserLeaderboardQuery`, `UserLeaderboardCalculator` (internal static) | `GET /api/v1/leaderboard/users` | `/leaderboard` *(nav link exists, page not yet built)* |
 | **Sync** | `SyncCommand`, `SyncJob` (Hangfire), `MatchFinishedEvent` (INotification) | `POST /api/v1/sync` (manual trigger) | — |
 
 ## Domain Entities
@@ -63,7 +63,6 @@ Quick-reference for what exists in the codebase. Update this file whenever a fea
 | `RegisterUserCommandTests` | Integration | Happy path, duplicate username, duplicate email |
 | `LoginUserQueryTests` | Integration | Login by username, by email, wrong password, unknown user |
 | `CreatePredictionValidatorTests` | Unit | Score range, required Guids |
-| `LeaderboardCalculatorTests` | Unit | Ranking logic, points, goals |
 | `SyncHandlerMappingTests` | Unit | `MapStatus()` and `MapRound()` string → enum conversions |
 | `GetAllMatchesQueryTests` | Integration | Kickoff ordering, team projection, multi-day span |
 | `GetMatchDetailQueryTests` | Integration | Null for missing match; goals/bookings ordered by minute; extended scores (AET/penalties) |
