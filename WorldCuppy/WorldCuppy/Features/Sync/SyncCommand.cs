@@ -13,7 +13,7 @@ public record SyncCommand : IRequest<SyncResult>;
 public record SyncResult(int TeamsUpserted, int MatchesUpserted, int StandingsUpserted, int GoalEventsAdded, int BookingEventsAdded);
 
 /// <summary>Handles <see cref="SyncCommand" />.</summary>
-public class SyncHandler(WorldCuppyDbContext db, FootballDataClient client)
+public partial class SyncHandler(WorldCuppyDbContext db, FootballDataClient client, ILogger<SyncHandler> logger)
     : IRequestHandler<SyncCommand, SyncResult>
 {
     /// <summary>Fetches teams, matches, standings, and match events from the API and upserts them into the database.</summary>
@@ -68,13 +68,30 @@ public class SyncHandler(WorldCuppyDbContext db, FootballDataClient client)
     private async Task<int> SyncMatchesAsync(CancellationToken ct)
     {
         // On first run the DB is empty — fetch the full schedule.
-        // On every subsequent run scope to yesterday → +5 days so we skip the
-        // ever-growing tail of already-finished matches and keep each sync cheap.
+        // On subsequent runs, extend the window back to the earliest match that still needs
+        // updating (Scheduled or Live). A fixed yesterday → +5 window would leave any match
+        // that fell through a sync gap permanently stuck as Scheduled.
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var hasMatches = await db.Matches.AnyAsync(ct);
-        var fdMatches = hasMatches
-            ? await client.GetMatchesAsync(dateFrom: today.AddDays(-1), dateTo: today.AddDays(5), ct)
-            : await client.GetMatchesAsync(cancellationToken: ct);
+        IReadOnlyList<FdMatch> fdMatches;
+        if (hasMatches)
+        {
+            var earliestPending = await db.Matches
+                .Where(m => m.Status != MatchStatus.Finished
+                         && m.Status != MatchStatus.Cancelled
+                         && m.Status != MatchStatus.Postponed)
+                .OrderBy(m => m.KickoffUtc)
+                .Select(m => (DateOnly?)m.GameDay)
+                .FirstOrDefaultAsync(ct);
+
+            // Fall back to yesterday when every non-cancelled match is already finished.
+            var dateFrom = earliestPending ?? today.AddDays(-1);
+            fdMatches = await client.GetMatchesAsync(dateFrom: dateFrom, dateTo: today.AddDays(5), ct);
+        }
+        else
+        {
+            fdMatches = await client.GetMatchesAsync(cancellationToken: ct);
+        }
 
         var teamsByExternalId = await db.Teams
             .Where(t => t.ExternalId != 0)
@@ -316,10 +333,11 @@ public class SyncHandler(WorldCuppyDbContext db, FootballDataClient client)
                 // Remaining matches carry forward; no blocking retry here.
                 break;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // Any other error on a single match should not abort the whole sync.
                 // The match will be retried on the next sync cycle.
+                LogEventSyncFailed(logger, matchRef.ExternalId, ex);
             }
 
             // Stay within the football-data.org free-tier rate limit (~10 req/min).
@@ -339,6 +357,9 @@ public class SyncHandler(WorldCuppyDbContext db, FootballDataClient client)
         "CANCELLED"                          => MatchStatus.Cancelled,
         _                                    => MatchStatus.Scheduled, // SCHEDULED, TIMED
     };
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to sync events for match {ExternalId} — will retry next cycle")]
+    private static partial void LogEventSyncFailed(ILogger logger, int externalId, Exception ex);
 
     internal static KnockoutRound? MapRound(string stage) => stage switch
     {
