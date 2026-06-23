@@ -7,12 +7,12 @@ Quick-reference for what exists in the codebase. Update this file whenever a fea
 | Feature | Handlers / Commands / Queries | API Endpoints | Blazor Page |
 |---|---|---|---|
 | **Users** | `RegisterUserCommand`, `LoginUserQuery`, `RegisterUserValidator` | `GET /account/complete-auth/{token}`, `GET /account/logout` | `/register`, `/login` |
-| **Predictions** | `CreatePredictionCommand`, `CreatePredictionValidator`, `GetPredictionsByUserQuery`, `GetUpcomingMatchesWithPredictionsQuery`, `UpdatePredictionCommand`, `UpdatePredictionValidator` | `POST /api/v1/predictions`, `GET /api/v1/predictions/user/{userId}`, `GET /api/v1/predictions/upcoming/{userId}`, `PUT /api/v1/predictions/{id}` | `/predictions` — upcoming matches grouped by day; predict/update scores; snackbar feedback |
+| **Predictions** | `CreatePredictionCommand`, `CreatePredictionValidator`, `GetPredictionsByUserQuery`, `GetUpcomingMatchesWithPredictionsQuery`, `UpdatePredictionCommand`, `UpdatePredictionValidator`, `AwardPredictionPointsHandler` (INotificationHandler) | `POST /api/v1/predictions`, `GET /api/v1/predictions/user/{userId}`, `GET /api/v1/predictions/upcoming/{userId}`, `PUT /api/v1/predictions/{id}` | `/predictions` — upcoming matches grouped by day; predict/update scores; snackbar feedback |
 | **Matches** | `GetMatchByIdQuery`, `GetMatchesByGameDayQuery`, `GetAllMatchesQuery`, `GetMatchDetailQuery` | `GET /api/v1/matches/{id}`, `GET /api/v1/matches?gameDay=` | `/matches` — scroll view grouped by day, auto-scrolls to today, matchday filter chips, click-to-detail dialog |
 | **Groups** | `GetGroupStandingsQuery` | — | `/groups` — group stage standings tables with form indicators |
 | **Teams** | `GetTeamsQuery`, `GetTeamByCodeQuery` | `GET /api/v1/teams`, `GET /api/v1/teams/{code}` | — |
 | **Leaderboard** | `GetLeaderboardQuery`, `LeaderboardCalculator` (internal static), `GetUserLeaderboardQuery`, `UserLeaderboardCalculator` (internal static) | `GET /api/v1/leaderboard`, `GET /api/v1/leaderboard/users` | `/leaderboard` *(nav link exists, page not yet built)* |
-| **Sync** | `SyncCommand`, `SyncJob` (Hangfire) | `POST /api/v1/sync` (manual trigger) | — |
+| **Sync** | `SyncCommand`, `SyncJob` (Hangfire), `MatchFinishedEvent` (INotification) | `POST /api/v1/sync` (manual trigger) | — |
 
 ## Domain Entities
 
@@ -21,7 +21,7 @@ Quick-reference for what exists in the codebase. Update this file whenever a fea
 | `User` | `Id (Guid)`, `Username`, `Email`, `PasswordHash`, `CreatedAtUtc` | Unique index on `Username`, unique index on `Email` | PBKDF2 hashed password |
 | `Match` | `Id`, `HomeTeamId`, `AwayTeamId`, `KickoffUtc`, `GameDay`, `Round`, `Venue`, `Group`, `HomeScore?`, `AwayScore?`, `HalfTimeHomeScore?`, `HalfTimeAwayScore?`, `ExtraTimeHomeScore?`, `ExtraTimeAwayScore?`, `PenaltyHomeScore?`, `PenaltyAwayScore?`, `MatchDuration?`, `Status`, `ExternalId` | Unique index on `ExternalId`; FK to `Team` ×2 (Restrict) | `Round` and `Status` stored as string; `MatchDuration`: REGULAR / EXTRA_TIME / PENALTY_SHOOTOUT |
 | `Team` | `Id`, `Name`, `Code` (3-char), `CrestUrl?`, `ExternalId` | Unique index on `ExternalId` | Synced from football-data.org |
-| `Prediction` | `Id`, `UserId (Guid)`, `MatchId`, `PredictedHomeScore`, `PredictedAwayScore`, `SubmittedAtUtc` | Composite unique index on `(UserId, MatchId)`; FK to `Match` (Cascade) | `UserId` is a bare Guid — no FK to `Users` table yet |
+| `Prediction` | `Id`, `UserId (Guid)`, `MatchId`, `PredictedHomeScore`, `PredictedAwayScore`, `SubmittedAtUtc`, `Points?`, `PointsAwardedAtUtc?` | Composite unique index on `(UserId, MatchId)`; FK to `Match` (Cascade) | `UserId` is a bare Guid — no FK to `Users` table yet; `Points` null until match finishes |
 | `GoalEvent` | `Id`, `MatchId`, `Minute`, `ScorerName?`, `AssistName?`, `Type`, `TeamName`, `IsHomeTeam` | FK to `Match` (Cascade) | Type: REGULAR / OWN_GOAL / PENALTY |
 | `BookingEvent` | `Id`, `MatchId`, `Minute`, `PlayerName?`, `CardType`, `IsHomeTeam` | FK to `Match` (Cascade) | CardType: YELLOW_CARD / RED_CARD / YELLOW_RED_CARD |
 | `GroupStanding` | `Id`, `Group`, `TeamId`, `Position`, `PlayedGames`, `Won`, `Draw`, `Lost`, `GoalsFor`, `GoalsAgainst`, `GoalDifference`, `Points`, `Form?` | Unique index on `(Group, TeamId)`; FK to `Team` (Restrict) | Synced from `GET /v4/competitions/WC/standings` every 15 min |
@@ -73,4 +73,6 @@ Quick-reference for what exists in the codebase. Update this file whenever a fea
 | `UpdatePredictionCommandTests` | Integration | Happy path; wrong owner → not found; match not Scheduled → error; prediction not found |
 | `CreatePredictionCommandTests` | Integration | Match not Scheduled → InvalidOperationException |
 | `UserLeaderboardCalculatorTests` | Unit | CalculatePoints exact/correct/wrong scoring; Rank ordering, tie-break, aggregation, sequential ranks |
-| `GetUserLeaderboardQueryTests` | Integration | Ranked entries with correct points for finished match predictions; user with no predictions excluded |
+| `PredictionPointsCalculatorTests` | Unit | Exact (3 pts); correct result home win, away win, draw (1 pt each); wrong result (0 pts) |
+| `AwardPredictionPointsHandlerTests` | Integration | Happy path multiple predictions; idempotency (second publish no-op); match with no predictions; group-stage match |
+| `GetUserLeaderboardQueryTests` | Integration | Ranked entries with persisted points; user with no predictions appears with 0 points; unawarded predictions excluded from totals |
