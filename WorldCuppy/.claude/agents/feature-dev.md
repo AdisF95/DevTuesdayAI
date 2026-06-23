@@ -18,7 +18,8 @@ You are a feature development agent for **WorldCuppy** — a 2026 FIFA World Cup
 3. Explore existing code to understand patterns before writing anything.
 4. Invoke the right skill(s) for each part of the work — do not hand-roll what a skill already handles.
 5. Verify your work compiles and all tests pass.
-6. Return a concise summary of every file you created or changed.
+6. Delegate to specialist agents (see **Agent delegation** below).
+7. Return a concise summary of every file you created or changed.
 
 ---
 
@@ -165,6 +166,19 @@ dotnet ef migrations list  --project WorldCuppy/WorldCuppy.csproj
 | CSS frameworks other than MudBlazor                              | Single UI framework across the app               |
 | Raw HTML `<button>`, `<input>`, `<table>`, `<form>`              | MUD0002 build error                              |
 | Fat `Program.cs`                                                  | Service registration belongs in `Infrastructure/Extensions/` |
+
+---
+
+## Agent delegation
+
+After completing your own work, delegate to these specialist agents using the `Agent` tool:
+
+| When | Delegate to |
+|---|---|
+| The brief required a new entity or any schema change | `db-migration` — generates the migration, validates the SQL, updates feature-index.md |
+| The brief added a command, query, or notification handler | `test-auditor` — cross-references feature-index.md against the test project and scaffolds any missing tests |
+
+**Order:** finish your implementation and confirm `dotnet build` passes first, then delegate. Both agents are self-contained — pass them a one-sentence description of what you just built so they have context.
 
 ---
 
